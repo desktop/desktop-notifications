@@ -1,0 +1,19 @@
+# ignore everything unrelated to the source code
+.vscode
+.prettierrc.yml
+benchmarks/
+docs/
+lib/
+script/
+test/
+.gitattributes
+tsconfig.json
+.yarnrc
+vendor/
+yarn-error.log
+*.tgz
+build
+jest.json
+.node-version
+.github
+dist/test
