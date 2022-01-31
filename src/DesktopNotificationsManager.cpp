@@ -44,13 +44,16 @@ DesktopNotificationsManager::DesktopNotificationsManager(const std::wstring &toa
         if (!SUCCEEDED(hr))
         {
             DN_LOG_ERROR(L"Failed to register com Factory, please make sure you "
-                          L"correctly initialized with RO_INIT_MULTITHREADED: "
-                       << hr);
+                         L"correctly initialized with RO_INIT_MULTITHREADED: "
+                         << hr);
         }
     }
+
+    if (char *envAppID = std::getenv("DN_APP_ID"))
     {
-        // Delete later: this will be set by the host app
-        HRESULT hr = SetCurrentProcessExplicitAppUserModelID(L"com.squirrel.GitHubDesktop.GitHubDesktop");
+        DN_LOG_INFO(L"Using custom App User Model ID '" << envAppID << "'");
+
+        HRESULT hr = SetCurrentProcessExplicitAppUserModelID(Utils::utf8ToWideChar(std::string(envAppID)));
         if (!SUCCEEDED(hr))
         {
             DN_LOG_ERROR(L"DesktopNotificationsManager: Failed to set AUMID");

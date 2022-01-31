@@ -15,6 +15,8 @@
 
 namespace Utils
 {
+    LPWSTR utf8ToWideChar(std::string utf8);
+
     std::unordered_map<std::wstring, std::wstring> splitData(const std::wstring &data);
 
     std::wstring formatData(const std::vector<std::pair<std::wstring, std::wstring>> &data);
