@@ -3343,19 +3343,19 @@ nice-try@^1.0.4:
   resolved "https://registry.yarnpkg.com/nice-try/-/nice-try-1.0.5.tgz#a3378a7696ce7d223e88fc9b764bd7ef1089e366"
   integrity sha512-1nh45deeb5olNY7eX82BkPO7SSxR5SSYJiPTrTdFUVYwAl8CKMA5N9PjTYkHiRjisVcxcQ1HXdLhx2qxxJzLNQ==
 
+node-abi@^2.2.0:
+  version "2.30.1"
+  resolved "https://registry.yarnpkg.com/node-abi/-/node-abi-2.30.1.tgz#c437d4b1fe0e285aaf290d45b45d4d7afedac4cf"
+  integrity sha512-/2D0wOQPgaUWzVSVgRMx+trKJRC2UG4SUc4oCJoXx9Uxjtp0Vy3/kt7zcbxHF8+Z/pK3UloLWzBISg72brfy1w==
+  dependencies:
+    semver "^5.4.1"
+
 node-abi@^2.21.0, node-abi@^2.7.0:
   version "2.21.0"
   resolved "https://registry.yarnpkg.com/node-abi/-/node-abi-2.21.0.tgz#c2dc9ebad6f4f53d6ea9b531e7b8faad81041d48"
   integrity sha512-smhrivuPqEM3H5LmnY3KU6HfYv0u4QklgAxfFyRNujKUzbUcYZ+Jc2EhukB9SRcD2VpqhxM7n/MIcp1Ua1/JMg==
   dependencies:
     semver "^5.4.1"
-
-node-abi@^3.0.0:
-  version "3.5.0"
-  resolved "https://registry.yarnpkg.com/node-abi/-/node-abi-3.5.0.tgz#26e8b7b251c3260a5ac5ba5aef3b4345a0229248"
-  integrity sha512-LtHvNIBgOy5mO8mPEUtkCW/YCRWYEKshIvqhe1GHHyXEHEB5mgICyYnAcl4qan3uFeRROErKGzatFHPf6kDxWw==
-  dependencies:
-    semver "^7.3.5"
 
 node-addon-api@^3.1.0:
   version "3.2.1"
@@ -3768,10 +3768,10 @@ prebuild-install@^5.3.5:
     tunnel-agent "^0.6.0"
     which-pm-runs "^1.0.0"
 
-prebuild@^11.0.0:
-  version "11.0.1"
-  resolved "https://registry.yarnpkg.com/prebuild/-/prebuild-11.0.1.tgz#ae81dcbf874c9da491800cd79a88922012dde84f"
-  integrity sha512-Kx9pm8exKo3LcQeMLH7Qxqoju6bllZkBAWXXABDyK82i3IQuw0/2klJPILf0TIPkS6GHUIsUgxkRfdm1lIdFyA==
+prebuild@^10.0.1:
+  version "10.0.1"
+  resolved "https://registry.yarnpkg.com/prebuild/-/prebuild-10.0.1.tgz#9d46a00f42b60ad1718479cc5e3d1ef4882b7f33"
+  integrity sha512-x0CkKDmHFwX49rTGEYJwB9jBQwJWxRzwUtP5PA9dP8khFGMm3oSFgYortxdlp0PkxB29EhWGp/KQE5g+adehYg==
   dependencies:
     cmake-js "~5.2.0"
     detect-libc "^1.0.3"
@@ -3783,7 +3783,7 @@ prebuild@^11.0.0:
     minimist "^1.1.2"
     mkdirp "^0.5.1"
     napi-build-utils "^1.0.1"
-    node-abi "^3.0.0"
+    node-abi "^2.2.0"
     node-gyp "^6.0.1"
     node-ninja "^1.0.1"
     noop-logger "^0.1.0"
@@ -4190,13 +4190,6 @@ semver@^7.3.2:
   version "7.3.4"
   resolved "https://registry.yarnpkg.com/semver/-/semver-7.3.4.tgz#27aaa7d2e4ca76452f98d3add093a72c943edc97"
   integrity sha512-tCfb2WLjqFAtXn4KEdxIhalnRtoKFN7nAwj0B3ZXCbQloV2tq5eDbcTmT68JJD3nRJq24/XgxtQKFIpQdtvmVw==
-  dependencies:
-    lru-cache "^6.0.0"
-
-semver@^7.3.5:
-  version "7.3.5"
-  resolved "https://registry.yarnpkg.com/semver/-/semver-7.3.5.tgz#0b621c879348d8998e4b0e4be94b3f12e6018ef7"
-  integrity sha512-PoeGJYh8HK4BTO/a9Tf6ZG3veo/A7ZVsYrSA6J8ny9nb3B1VrpkuN+z9OE5wfE5p6H4LchYZsegiQgbJD94ZFQ==
   dependencies:
     lru-cache "^6.0.0"
 

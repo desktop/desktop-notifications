@@ -35,6 +35,9 @@ import {
   await new Promise(r => setTimeout(r, 5000))
   n2.close()
   await new Promise(r => setTimeout(r, 5000))
+  n2.close()
+  n2.close()
+  n2.close()
   console.log('finished waiting')
 
   terminateNotifications()

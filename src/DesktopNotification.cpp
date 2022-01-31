@@ -26,7 +26,7 @@ DesktopNotification::DesktopNotification(const std::wstring &id,
     HRESULT hr = GetCurrentProcessExplicitAppUserModelID(&appID);
     if (!SUCCEEDED(hr))
     {
-        std::wcerr << L"Couldn't retrieve AUMID" << std::endl;
+        DN_LOG_ERROR(L"Couldn't retrieve AUMID");
         return;
     }
     else
@@ -49,11 +49,10 @@ IFACEMETHODIMP DesktopNotification::Invoke(_In_ IToastNotification * /*sender*/,
     args->QueryInterface(&buttonReply);
     if (buttonReply == nullptr)
     {
-        std::wcerr << L"args is not a IToastActivatedEventArgs" << std::endl;
+        DN_LOG_ERROR(L"args is not a IToastActivatedEventArgs");
         return S_OK;
     }
 
-    std::wcout << L"The user clicked on the toast." << std::endl;
     invokeJSCallback("click");
 
     return S_OK;
@@ -70,15 +69,12 @@ IFACEMETHODIMP DesktopNotification::Invoke(_In_ IToastNotification * /* sender *
         switch (tdr)
         {
         case ToastDismissalReason_ApplicationHidden:
-            std::wcout << L"The application hid the toast using ToastNotifier.hide()" << std::endl;
             invokeJSCallback("hidden");
             break;
         case ToastDismissalReason_UserCanceled:
-            std::wcout << L"The user dismissed this toast" << std::endl;
             invokeJSCallback("dismissed");
             break;
         case ToastDismissalReason_TimedOut:
-            std::wcout << L"The toast has timed out" << std::endl;
             invokeJSCallback("timedout");
             break;
         }
@@ -90,7 +86,7 @@ IFACEMETHODIMP DesktopNotification::Invoke(_In_ IToastNotification * /* sender *
 IFACEMETHODIMP DesktopNotification::Invoke(_In_ IToastNotification * /* sender */,
                                            _In_ IToastFailedEventArgs * /* e */)
 {
-    std::wcerr << L"The toast encountered an error." << std::endl;
+    DN_LOG_ERROR(L"The toast encountered an error.");
     invokeJSCallback("error");
     return S_OK;
 }
@@ -197,7 +193,7 @@ void DesktopNotification::printXML()
     HSTRING string;
     s->GetXml(&string);
     PCWSTR str = WindowsGetStringRawBuffer(string, nullptr);
-    std::wcout << L"------------------------\n\t\t\t" << str << L"\n\t\t" << L"------------------------" << std::endl;
+    DN_LOG_DEBUG(L"------------------------\n\t\t\t" << str << L"\n\t\t" << L"------------------------");
 }
 
 std::wstring DesktopNotification::formatAction(
@@ -229,7 +225,7 @@ HRESULT DesktopNotification::createToast(ComPtr<IToastNotificationManagerStatics
     DN_RETURN_ON_ERROR(addAttribute(L"launch", rootAttributes.Get(), data));
     DN_RETURN_ON_ERROR(setTextValues());
 
-    printXML();
+    // printXML();
 
     DN_RETURN_ON_ERROR(toastManager->CreateToastNotifierWithId(
         HStringReference(m_appID.c_str()).Get(), &m_notifier));
@@ -251,7 +247,7 @@ HRESULT DesktopNotification::createToast(ComPtr<IToastNotificationManagerStatics
     NotificationSetting setting = NotificationSetting_Enabled;
     if (!DN_CHECK_RESULT(m_notifier->get_Setting(&setting)))
     {
-        std::wcout << "Failed to retreive NotificationSettings ensure your appId is registered" << std::endl;
+        DN_LOG_ERROR("Failed to retreive NotificationSettings ensure your appId is registered");
     }
     switch (setting)
     {
@@ -277,8 +273,7 @@ HRESULT DesktopNotification::createToast(ComPtr<IToastNotificationManagerStatics
         err << L"Notifications are disabled\n"
             << L"Reason: " << error << L" Please make sure that the app id is set correctly.\n"
             << L"Command Line: " << GetCommandLineW();
-        std::wcout << err.str() << std::endl;
-        std::wcerr << err.str() << std::endl;
+        DN_LOG_ERROR(err.str());
     }
     return m_notifier->Show(m_notification.Get());
 }

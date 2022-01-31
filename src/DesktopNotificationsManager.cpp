@@ -33,7 +33,7 @@ DesktopNotificationsManager::DesktopNotificationsManager(const std::wstring &toa
         HRESULT hr = Windows::Foundation::Initialize(RO_INIT_MULTITHREADED);
         if (!SUCCEEDED(hr))
         {
-            std::wcerr << L"Failed to initialize with RO_INIT_MULTITHREADED: " << hr << std::endl;
+            DN_LOG_ERROR(L"Failed to initialize with RO_INIT_MULTITHREADED: " << hr);
         }
     }
     {
@@ -43,10 +43,9 @@ DesktopNotificationsManager::DesktopNotificationsManager(const std::wstring &toa
             &m_toastManager);
         if (!SUCCEEDED(hr))
         {
-            std::wcerr << L"Failed to register com Factory, please make sure you "
+            DN_LOG_ERROR(L"Failed to register com Factory, please make sure you "
                           L"correctly initialized with RO_INIT_MULTITHREADED: "
-                       << hr
-                       << std::endl;
+                       << hr);
         }
     }
     {
@@ -54,8 +53,7 @@ DesktopNotificationsManager::DesktopNotificationsManager(const std::wstring &toa
         HRESULT hr = SetCurrentProcessExplicitAppUserModelID(L"com.squirrel.GitHubDesktop.GitHubDesktop");
         if (!SUCCEEDED(hr))
         {
-            std::wcerr << L"DesktopNotificationsManager: Failed to set AUMID"
-                       << std::endl;
+            DN_LOG_ERROR(L"DesktopNotificationsManager: Failed to set AUMID");
             return;
         }
     }
@@ -89,7 +87,7 @@ HRESULT DesktopNotificationsManager::RegisterClassObjects(const std::wstring &to
         &flags, nullptr, __uuidof(IClassFactory), &factory);
     if (FAILED(hr))
     {
-        std::cerr << "Failed to create Factory for Action Center activator; hr: " << hr << std::endl;
+        DN_LOG_ERROR("Failed to create Factory for Action Center activator; hr: " << hr);
         return hr;
     }
 
@@ -97,7 +95,7 @@ HRESULT DesktopNotificationsManager::RegisterClassObjects(const std::wstring &to
     hr = factory.As(&class_factory);
     if (FAILED(hr))
     {
-        std::cerr << "Failed to create IClassFactory for Action Center activator; hr: " << hr << std::endl;
+        DN_LOG_ERROR("Failed to create IClassFactory for Action Center activator; hr: " << hr);
         return hr;
     }
 
@@ -112,7 +110,7 @@ HRESULT DesktopNotificationsManager::RegisterClassObjects(const std::wstring &to
                                   std::extent<decltype(m_comCookies)>());
     if (FAILED(hr))
     {
-        std::cerr << "Failed to register Action Center activator; hr: " << hr << std::endl;
+        DN_LOG_ERROR("Failed to register Action Center activator; hr: " << hr);
     }
     else
     {
@@ -143,7 +141,7 @@ HRESULT DesktopNotificationsManager::UnregisterClassObjects()
                                             std::extent<decltype(m_comCookies)>());
     if (FAILED(hr))
     {
-        std::cerr << "Failed to unregister Action Center activator; hr: " << hr << std::endl;
+        DN_LOG_ERROR("Failed to unregister Action Center activator; hr: " << hr);
     }
 
     return hr;
@@ -188,6 +186,7 @@ bool DesktopNotificationsManager::closeNotification(ComPtr<DesktopNotification> 
             return true;
         }
     }
-    std::wcout << "Notification " << d->getID() << " does not exist" << std::endl;
+
+    DN_LOG_ERROR("Notification " << d->getID() << " does not exist");
     return false;
 }
