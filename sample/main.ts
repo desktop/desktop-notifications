@@ -3,7 +3,6 @@ import {
   terminateNotifications,
   DesktopNotification,
 } from '../lib/desktop-notifications'
-
 ;(async () => {
   initializeNotifications('{27D44D0C-A542-5B90-BCDB-AC3126048BA2}')
 

@@ -1,6 +1,4 @@
 {
-  "testMatch": [
-    "**/dist/**/*-test.js"
-  ],
+  "testMatch": ["**/dist/**/*-test.js"],
   "testTimeout": 50000
 }
