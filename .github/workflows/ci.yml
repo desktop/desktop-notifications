@@ -43,8 +43,8 @@ jobs:
         run: yarn check-prettier
       - name: Build
         run: yarn build
-      - name: Test
-        run: yarn test
+      # - name: Test
+      #   run: yarn test
       - name: Prebuild x64
         run: npm run prebuild-napi-x64
       - name: Prebuild arm64
