@@ -1,15 +1,15 @@
 {
   "name": "desktop-notifications",
-  "version": "0.0.1",
+  "version": "0.1.2",
   "description": "A simple and opinionated library for handling Windows notifications",
   "main": "dist/lib/index.js",
   "typings": "dist/lib/index.d.ts",
   "scripts": {
-    "install": "node-gyp rebuild",
+    "install": "prebuild-install || node-gyp rebuild",
     "build": "node-gyp rebuild && tsc",
     "pretest": "yarn build",
     "test": "jest -c jest.json",
-    "prepublishOnly": "yarn build && yarn test",
+    "prepublishOnly": "yarn build",
     "postpublish": "git push --follow-tags",
     "build-and-run-main": "yarn build && ts-node sample/main.ts",
     "just-run-main": "ts-node sample/main.ts",

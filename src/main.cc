@@ -13,40 +13,13 @@
 #include <iostream>
 
 #include "DesktopNotificationsManager.h"
+#include "Utils.h"
 
 using namespace Napi;
 
 namespace
 {
   std::shared_ptr<DesktopNotificationsManager> desktopNotificationsManager;
-
-  LPWSTR utf8ToWideChar(std::string utf8)
-  {
-    int wide_char_length = MultiByteToWideChar(CP_UTF8,
-                                               0,
-                                               utf8.c_str(),
-                                               -1,
-                                               nullptr,
-                                               0);
-    if (wide_char_length == 0)
-    {
-      return nullptr;
-    }
-
-    LPWSTR result = new WCHAR[wide_char_length];
-    if (MultiByteToWideChar(CP_UTF8,
-                            0,
-                            utf8.c_str(),
-                            -1,
-                            result,
-                            wide_char_length) == 0)
-    {
-      delete[] result;
-      return nullptr;
-    }
-
-    return result;
-  }
 
   Napi::Value initializeNotifications(const Napi::CallbackInfo &info)
   {
@@ -70,7 +43,7 @@ namespace
       return env.Undefined();
     }
 
-    auto toastActivatorClsid = utf8ToWideChar(info[0].As<Napi::String>());
+    auto toastActivatorClsid = Utils::utf8ToWideChar(info[0].As<Napi::String>());
     desktopNotificationsManager = std::make_shared<DesktopNotificationsManager>(toastActivatorClsid);
 
     return info.Env().Undefined();
@@ -122,9 +95,9 @@ namespace
       return env.Undefined();
     }
 
-    auto id = utf8ToWideChar(info[0].As<Napi::String>());
-    auto title = utf8ToWideChar(info[1].As<Napi::String>());
-    auto body = utf8ToWideChar(info[2].As<Napi::String>());
+    auto id = Utils::utf8ToWideChar(info[0].As<Napi::String>());
+    auto title = Utils::utf8ToWideChar(info[1].As<Napi::String>());
+    auto body = Utils::utf8ToWideChar(info[2].As<Napi::String>());
     auto callback = info[3].As<Napi::Function>();
 
     desktopNotificationsManager->displayToast(id, title, body, callback);
@@ -154,7 +127,7 @@ namespace
       return env.Undefined();
     }
 
-    auto id = utf8ToWideChar(info[0].As<Napi::String>());
+    auto id = Utils::utf8ToWideChar(info[0].As<Napi::String>());
 
     desktopNotificationsManager->closeToast(id);
 

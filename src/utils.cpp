@@ -15,6 +15,34 @@ namespace
 
 namespace Utils
 {
+  LPWSTR Utils::utf8ToWideChar(std::string utf8)
+  {
+    int wide_char_length = MultiByteToWideChar(CP_UTF8,
+                                               0,
+                                               utf8.c_str(),
+                                               -1,
+                                               nullptr,
+                                               0);
+    if (wide_char_length == 0)
+    {
+      return nullptr;
+    }
+
+    LPWSTR result = new WCHAR[wide_char_length];
+    if (MultiByteToWideChar(CP_UTF8,
+                            0,
+                            utf8.c_str(),
+                            -1,
+                            result,
+                            wide_char_length) == 0)
+    {
+      delete[] result;
+      return nullptr;
+    }
+
+    return result;
+  }
+
     std::unordered_map<std::wstring, std::wstring> splitData(const std::wstring &data)
     {
         std::unordered_map<std::wstring, std::wstring> out;
