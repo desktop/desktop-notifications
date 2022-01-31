@@ -27,7 +27,7 @@ Desktop:
 
 - [`electron`](https://www.electronjs.org/) doesn't support Windows
   notifications when those are hidden away in the Action Center, because it
-  doens't have a COM activator that could leverage CLSID-based activation. More
+  doesn't have a COM activator that could leverage CLSID-based activation. More
   details about this can be found in
   [electron/electron#29461](https://github.com/electron/electron/issues/29461).
 - [`node-notifier`](https://www.npmjs.com/package/node-notifier) relies on
