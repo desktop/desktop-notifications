@@ -27,7 +27,6 @@ namespace
 
     if (desktopNotificationsManager)
     {
-      //Napi::TypeError::New(env, "Notifications already initialized.").ThrowAsJavaScriptException();
       return env.Undefined();
     }
 
@@ -61,7 +60,7 @@ namespace
 
     if (!desktopNotificationsManager)
     {
-      Napi::TypeError::New(env, "Notifications not initialized. Call `initializeNotifications`.").ThrowAsJavaScriptException();
+      DN_LOG_ERROR("Cannot show notification: notifications not initialized.");
       return env.Undefined();
     }
 
@@ -111,7 +110,7 @@ namespace
 
     if (!desktopNotificationsManager)
     {
-      Napi::TypeError::New(env, "Notifications not initialized. Call `initializeNotifications`.").ThrowAsJavaScriptException();
+      DN_LOG_ERROR("Cannot close notification: notifications not initialized.");
       return env.Undefined();
     }
 
