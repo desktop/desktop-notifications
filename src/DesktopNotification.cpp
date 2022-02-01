@@ -51,17 +51,6 @@ HRESULT DesktopNotification::startListeningEvents(DesktopNotificationsManager *d
     return S_OK;
 }
 
-void DesktopNotification::stopListeningEvents()
-{
-    if (m_notification)
-    {
-        ComPtr<IToastNotification> toast = m_notification;
-        toast->remove_Activated(m_activatedToken);
-        toast->remove_Dismissed(m_dismissedToken);
-        toast->remove_Failed(m_failedToken);
-    }
-}
-
 HRESULT DesktopNotification::setNodeValueString(const HSTRING &inputString, IXmlNode *node)
 {
     ComPtr<IXmlText> inputText;

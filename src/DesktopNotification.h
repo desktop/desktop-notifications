@@ -22,8 +22,6 @@ public:
     HRESULT createToast(Microsoft::WRL::ComPtr<ABI::Windows::UI::Notifications::IToastNotificationManagerStatics> toastManager,
                         DesktopNotificationsManager *desktopNotificationsManager);
 
-    void stopListeningEvents();
-
 private:
     std::wstring m_appID;
 

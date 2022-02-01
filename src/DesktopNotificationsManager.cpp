@@ -199,8 +199,6 @@ bool DesktopNotificationsManager::closeToast(const std::wstring &id)
 
 bool DesktopNotificationsManager::closeNotification(std::shared_ptr<DesktopNotification> d)
 {
-    d->stopListeningEvents();
-
     if (auto history = getHistory())
     {
         if (DN_CHECK_RESULT(history->RemoveGroupedTagWithId(
@@ -227,7 +225,13 @@ IFACEMETHODIMP DesktopNotificationsManager::Invoke(_In_ IToastNotification * /*s
         return S_OK;
     }
 
-    invokeJSCallback("click", "REPLACE-ME");
+    HSTRING dataArgs;
+    buttonReply->get_Arguments(&dataArgs);
+    std::wstring data = WindowsGetStringRawBuffer(dataArgs, nullptr);
+    const auto dataMap = Utils::splitData(data);
+    const auto notificationID = Utils::wideCharToUTF8(dataMap.at(L"notificationId"));
+
+    invokeJSCallback("click", notificationID);
 
     return S_OK;
 }
