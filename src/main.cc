@@ -30,7 +30,7 @@ namespace
       return env.Undefined();
     }
 
-    if (info.Length() < 1)
+    if (info.Length() < 2)
     {
       Napi::TypeError::New(env, "Wrong number of arguments").ThrowAsJavaScriptException();
       return env.Undefined();
@@ -42,8 +42,16 @@ namespace
       return env.Undefined();
     }
 
+    if (!info[1].IsFunction())
+    {
+      Napi::TypeError::New(env, "Callback must be a function.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
     auto toastActivatorClsid = Utils::utf8ToWideChar(info[0].As<Napi::String>());
-    desktopNotificationsManager = std::make_shared<DesktopNotificationsManager>(toastActivatorClsid);
+    auto callback = info[1].As<Napi::Function>();
+
+    desktopNotificationsManager = std::make_shared<DesktopNotificationsManager>(toastActivatorClsid, callback);
 
     return info.Env().Undefined();
   }
@@ -64,7 +72,7 @@ namespace
       return env.Undefined();
     }
 
-    if (info.Length() < 4)
+    if (info.Length() < 3)
     {
       Napi::TypeError::New(env, "Wrong number of arguments").ThrowAsJavaScriptException();
       return env.Undefined();
@@ -88,18 +96,11 @@ namespace
       return env.Undefined();
     }
 
-    if (!info[3].IsFunction())
-    {
-      Napi::TypeError::New(env, "Callback must be a function.").ThrowAsJavaScriptException();
-      return env.Undefined();
-    }
-
     auto id = Utils::utf8ToWideChar(info[0].As<Napi::String>());
     auto title = Utils::utf8ToWideChar(info[1].As<Napi::String>());
     auto body = Utils::utf8ToWideChar(info[2].As<Napi::String>());
-    auto callback = info[3].As<Napi::Function>();
 
-    desktopNotificationsManager->displayToast(id, title, body, callback);
+    desktopNotificationsManager->displayToast(id, title, body);
 
     return env.Undefined();
   }

@@ -11,7 +11,7 @@ export function initializeNotifications(toastActivatorClsid: string) {
     return
   }
 
-  nativeModule.initializeNotifications(toastActivatorClsid)
+  nativeModule.initializeNotifications(toastActivatorClsid, onNotificationEvent)
 }
 
 export function terminateNotifications() {
@@ -26,15 +26,14 @@ export function terminateNotifications() {
 function showNotification(
   id: string,
   title: string,
-  body: string,
-  callback: (event: string) => void
+  body: string
 ): number | null {
   if (!nativeModule) {
     // this code is a no-op when the module is missing
     return null
   }
 
-  return nativeModule.showNotification(id, title, body, callback)
+  return nativeModule.showNotification(id, title, body)
 }
 
 function closeNotification(id: string) {
@@ -46,6 +45,21 @@ function closeNotification(id: string) {
   return nativeModule.closeNotification(id)
 }
 
+type DesktopNotificationEvent = 'click'
+
+const shownNotifications: Map<string, DesktopNotification> = new Map()
+
+function onNotificationEvent(event: DesktopNotificationEvent, id: string) {
+  const notification = shownNotifications.get(id)
+  if (notification === undefined) {
+    return
+  }
+
+  if (event === 'click') {
+    notification.onclick?.()
+  }
+}
+
 export class DesktopNotification {
   public onclick?: () => void
   private readonly id: string
@@ -55,14 +69,13 @@ export class DesktopNotification {
   }
 
   public show() {
-    showNotification(this.id, this.title, this.body, (event: string) => {
-      if (event === 'click') {
-        this.onclick?.()
-      }
-    })
+    shownNotifications.set(this.id, this)
+
+    showNotification(this.id, this.title, this.body)
   }
 
   public close() {
+    shownNotifications.delete(this.id)
     closeNotification(this.id)
   }
 }
