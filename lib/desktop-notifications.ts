@@ -56,8 +56,6 @@ export class DesktopNotification {
 
   public show() {
     showNotification(this.id, this.title, this.body, (event: string) => {
-      console.log(`EVENT (${this.id}):`, event)
-
       if (event === 'click') {
         this.onclick?.()
       }
