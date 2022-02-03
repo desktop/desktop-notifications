@@ -1,26 +1,21 @@
 import { v4 as uuidv4 } from 'uuid'
+import * as LRUCache from 'lru-cache'
 
+// Windows-only for now
 const nativeModule =
   process.platform === 'win32'
     ? require('../../build/Release/desktop-notifications.node')
     : null
 
 export function initializeNotifications(toastActivatorClsid: string) {
-  if (!nativeModule) {
-    // this code is a no-op when the module is missing
-    return
-  }
-
-  nativeModule.initializeNotifications(toastActivatorClsid, onNotificationEvent)
+  nativeModule?.initializeNotifications(
+    toastActivatorClsid,
+    onNotificationEvent
+  )
 }
 
 export function terminateNotifications() {
-  if (!nativeModule) {
-    // this code is a no-op when the module is missing
-    return
-  }
-
-  nativeModule.terminateNotifications()
+  nativeModule?.terminateNotifications()
 }
 
 function showNotification(
@@ -28,12 +23,7 @@ function showNotification(
   title: string,
   body: string
 ): number | null {
-  if (!nativeModule) {
-    // this code is a no-op when the module is missing
-    return null
-  }
-
-  return nativeModule.showNotification(id, title, body)
+  return nativeModule?.showNotification(id, title, body) ?? null
 }
 
 function closeNotification(id: string) {
@@ -47,17 +37,21 @@ function closeNotification(id: string) {
 
 type DesktopNotificationEvent = 'click'
 
-const shownNotifications: Map<string, DesktopNotification> = new Map()
+const shownNotifications = new LRUCache<string, DesktopNotification>({
+  max: 50,
+})
 
 function onNotificationEvent(event: DesktopNotificationEvent, id: string) {
   const notification = shownNotifications.get(id)
   if (notification === undefined) {
+    // TODO: handle notifications that are not in the cache
     return
   }
 
   if (event === 'click') {
     notification.onclick?.()
   }
+  // TODO: handle other events?
 }
 
 export class DesktopNotification {
@@ -70,12 +64,11 @@ export class DesktopNotification {
 
   public show() {
     shownNotifications.set(this.id, this)
-
     showNotification(this.id, this.title, this.body)
   }
 
   public close() {
-    shownNotifications.delete(this.id)
+    shownNotifications.del(this.id)
     closeNotification(this.id)
   }
 }
