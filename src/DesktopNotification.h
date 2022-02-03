@@ -22,6 +22,8 @@ public:
     HRESULT createToast(Microsoft::WRL::ComPtr<ABI::Windows::UI::Notifications::IToastNotificationManagerStatics> toastManager,
                         DesktopNotificationsManager *desktopNotificationsManager);
 
+    static std::string getNotificationIDFromToast(ABI::Windows::UI::Notifications::IToastNotification *toast);
+
 private:
     std::wstring m_appID;
 

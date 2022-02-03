@@ -5,6 +5,8 @@
 #include <sstream>
 #include <wrl.h>
 
+#include "Utils.h"
+
 #define DN_WSTRINGIFY(X) L##X
 #define DN_STRINGIFY(X) DN_WSTRINGIFY(X)
 

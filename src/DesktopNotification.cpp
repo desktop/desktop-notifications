@@ -9,6 +9,10 @@
 #include <assert.h>
 #include <wrl\wrappers\corewrappers.h>
 
+const std::wstring kLaunchAttribute = L"launch";
+const std::wstring kActionAttribute = L"action";
+const std::wstring kNotificationIDAttribute = L"notificationId";
+
 using namespace ABI::Windows::UI::Notifications;
 using namespace Windows::Foundation;
 using namespace Wrappers;
@@ -113,8 +117,8 @@ std::wstring DesktopNotification::formatAction(
     const std::vector<std::pair<std::wstring, std::wstring>> &extraData = {}) const
 {
     std::vector<std::pair<std::wstring, std::wstring>> data = {
-        {L"action", action},
-        {L"notificationId", m_id}};
+        {kActionAttribute, action},
+        {kNotificationIDAttribute, m_id}};
     data.insert(data.end(), extraData.cbegin(), extraData.cend());
     return Utils::formatData(data);
 }
@@ -135,7 +139,7 @@ HRESULT DesktopNotification::createToast(ComPtr<IToastNotificationManagerStatics
     DN_RETURN_ON_ERROR(root->get_Attributes(&rootAttributes));
 
     const auto data = formatAction(L"clicked");
-    DN_RETURN_ON_ERROR(addAttribute(L"launch", rootAttributes.Get(), data));
+    DN_RETURN_ON_ERROR(addAttribute(kLaunchAttribute, rootAttributes.Get(), data));
     DN_RETURN_ON_ERROR(setTextValues());
 
     // printXML();
@@ -189,4 +193,24 @@ HRESULT DesktopNotification::createToast(ComPtr<IToastNotificationManagerStatics
         DN_LOG_ERROR(err.str());
     }
     return m_notifier->Show(m_notification.Get());
+}
+
+std::string DesktopNotification::getNotificationIDFromToast(IToastNotification *toast)
+{
+    IXmlDocument *xmlDoc = nullptr;
+    toast->get_Content(&xmlDoc);
+    if (xmlDoc == nullptr)
+    {
+        DN_LOG_ERROR(L"Could not get xml document from toast");
+        return "";
+    }
+
+    // Get "launch" attribute and split it to obtain the notification ID
+    HSTRING launchArgs;
+    IXmlElement *rootElement = nullptr;
+    xmlDoc->get_DocumentElement(&rootElement);
+    rootElement->GetAttribute(HStringReference(kLaunchAttribute.c_str()).Get(), &launchArgs);
+    std::wstring launchData = WindowsGetStringRawBuffer(launchArgs, nullptr);
+    const auto launchDataMap = Utils::splitData(launchData);
+    return Utils::wideCharToUTF8(launchDataMap.at(kNotificationIDAttribute));
 }

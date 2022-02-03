@@ -237,9 +237,16 @@ IFACEMETHODIMP DesktopNotificationsManager::Invoke(_In_ IToastNotification * /*s
 }
 
 // DesktopToastDismissedEventHandler
-IFACEMETHODIMP DesktopNotificationsManager::Invoke(_In_ IToastNotification * /* sender */,
+IFACEMETHODIMP DesktopNotificationsManager::Invoke(_In_ IToastNotification *sender,
                                                    _In_ IToastDismissedEventArgs *e)
 {
+    const auto notificationID = DesktopNotification::getNotificationIDFromToast(sender);
+    if (notificationID == "")
+    {
+        DN_LOG_ERROR(L"Could not get notification ID from toast");
+        return S_OK;
+    }
+
     ToastDismissalReason tdr;
     HRESULT hr = e->get_Reason(&tdr);
     if (SUCCEEDED(hr))
@@ -247,25 +254,33 @@ IFACEMETHODIMP DesktopNotificationsManager::Invoke(_In_ IToastNotification * /* 
         switch (tdr)
         {
         case ToastDismissalReason_ApplicationHidden:
-            invokeJSCallback("hidden", "REPLACE-ME");
+            invokeJSCallback("hidden", notificationID);
             break;
         case ToastDismissalReason_UserCanceled:
-            invokeJSCallback("dismissed", "REPLACE-ME");
+            invokeJSCallback("dismissed", notificationID);
             break;
         case ToastDismissalReason_TimedOut:
-            invokeJSCallback("timedout", "REPLACE-ME");
+            invokeJSCallback("timedout", notificationID);
             break;
         }
     }
+
     return S_OK;
 }
 
 // DesktopToastFailedEventHandler
-IFACEMETHODIMP DesktopNotificationsManager::Invoke(_In_ IToastNotification * /* sender */,
-                                                   _In_ IToastFailedEventArgs * /* e */)
+IFACEMETHODIMP DesktopNotificationsManager::Invoke(_In_ IToastNotification *sender,
+                                                   _In_ IToastFailedEventArgs *e)
 {
+    const auto notificationID = DesktopNotification::getNotificationIDFromToast(sender);
+    if (notificationID == "")
+    {
+        DN_LOG_ERROR(L"Could not get notification ID from toast");
+        return S_OK;
+    }
+
     DN_LOG_ERROR(L"The toast encountered an error.");
-    invokeJSCallback("error", "REPLACE-ME");
+    invokeJSCallback("error", notificationID);
     return S_OK;
 }
 
