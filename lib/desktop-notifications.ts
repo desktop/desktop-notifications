@@ -14,20 +14,37 @@ export function supportsNotifications() {
   return majorVersion >= 10
 }
 
-// Windows-only for now
-const nativeModule = supportsNotifications()
-  ? require('../../build/Release/desktop-notifications.node')
-  : null
+// The native binary will be loaded lazily to avoid any possible crash at start
+// time, which are harder to trace.
+let _nativeModule: any | null | undefined = undefined
 
+function getNativeModule() {
+  if (_nativeModule !== undefined) {
+    return _nativeModule
+  }
+
+  _nativeModule = supportsNotifications()
+    ? require('../../build/Release/desktop-notifications.node')
+    : null
+
+  return _nativeModule
+}
+
+/**
+ * Initializes the desktop-notifications system.
+ *
+ * @param toastActivatorClsid CLSID used by Windows to report notification events
+ */
 export function initializeNotifications(toastActivatorClsid: string) {
-  nativeModule?.initializeNotifications(
+  getNativeModule()?.initializeNotifications(
     toastActivatorClsid,
     onNotificationEvent
   )
 }
 
+/** Terminates the desktop-notifications system. */
 export function terminateNotifications() {
-  nativeModule?.terminateNotifications()
+  getNativeModule()?.terminateNotifications()
 }
 
 function showNotification(
@@ -35,16 +52,11 @@ function showNotification(
   title: string,
   body: string
 ): number | null {
-  return nativeModule?.showNotification(id, title, body) ?? null
+  return getNativeModule()?.showNotification(id, title, body) ?? null
 }
 
 function closeNotification(id: string) {
-  if (!nativeModule) {
-    // this code is a no-op when the module is missing
-    return
-  }
-
-  return nativeModule.closeNotification(id)
+  return getNativeModule()?.closeNotification(id)
 }
 
 type DesktopNotificationEvent = 'click'
@@ -67,18 +79,22 @@ function onNotificationEvent(event: DesktopNotificationEvent, id: string) {
 }
 
 export class DesktopNotification {
+  /** Handler of click events. */
   public onclick?: () => void
+
   private readonly id: string
 
   constructor(public readonly title: string, public readonly body: string) {
     this.id = uuidv4()
   }
 
+  /** Shows the notification. */
   public show() {
     shownNotifications.set(this.id, this)
     showNotification(this.id, this.title, this.body)
   }
 
+  /** Closes the notification if it was ever shown. */
   public close() {
     shownNotifications.delete(this.id)
     closeNotification(this.id)
