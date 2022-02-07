@@ -38,7 +38,7 @@ function closeNotification(id: string) {
 type DesktopNotificationEvent = 'click'
 
 const shownNotifications = new LRUCache<string, DesktopNotification>({
-  max: 50,
+  max: 100,
 })
 
 function onNotificationEvent(event: DesktopNotificationEvent, id: string) {
