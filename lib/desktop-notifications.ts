@@ -1,5 +1,5 @@
+import QuickLRU from 'quick-lru'
 import { v4 as uuidv4 } from 'uuid'
-import * as LRUCache from 'lru-cache'
 
 // Windows-only for now
 const nativeModule =
@@ -37,8 +37,8 @@ function closeNotification(id: string) {
 
 type DesktopNotificationEvent = 'click'
 
-const shownNotifications = new LRUCache<string, DesktopNotification>({
-  max: 100,
+const shownNotifications = new QuickLRU<string, DesktopNotification>({
+  maxSize: 200,
 })
 
 function onNotificationEvent(event: DesktopNotificationEvent, id: string) {
@@ -68,7 +68,7 @@ export class DesktopNotification {
   }
 
   public close() {
-    shownNotifications.del(this.id)
+    shownNotifications.delete(this.id)
     closeNotification(this.id)
   }
 }
