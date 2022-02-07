@@ -9,96 +9,23 @@
 #include <assert.h>
 #include <wrl\wrappers\corewrappers.h>
 
+const std::wstring kLaunchAttribute = L"launch";
+const std::wstring kActionAttribute = L"action";
+const std::wstring kNotificationIDAttribute = L"notificationId";
+
 using namespace ABI::Windows::UI::Notifications;
 using namespace Windows::Foundation;
 using namespace Wrappers;
 
 DesktopNotification::DesktopNotification(const std::wstring &id,
-                                         const std::wstring &title, const std::wstring &body,
-                                         const Napi::Function &callback)
-    : m_ref(0),
-      m_title(title),
+                                         const std::wstring &appID,
+                                         const std::wstring &title,
+                                         const std::wstring &body)
+    : m_title(title),
       m_body(body),
-      m_callback(Napi::ThreadSafeFunction::New(callback.Env(), callback, "Notification Callback", 0, 1)),
+      m_appID(appID),
       m_id(id)
 {
-    PWSTR appID;
-    HRESULT hr = GetCurrentProcessExplicitAppUserModelID(&appID);
-    if (!SUCCEEDED(hr))
-    {
-        DN_LOG_ERROR(L"Couldn't retrieve AUMID");
-        return;
-    }
-    else
-    {
-        m_appID = std::wstring(appID);
-        CoTaskMemFree(appID);
-    }
-}
-
-DesktopNotification::~DesktopNotification()
-{
-    m_callback.Release();
-}
-
-// DesktopToastActivatedEventHandler
-IFACEMETHODIMP DesktopNotification::Invoke(_In_ IToastNotification * /*sender*/,
-                                           _In_ IInspectable *args)
-{
-    IToastActivatedEventArgs *buttonReply = nullptr;
-    args->QueryInterface(&buttonReply);
-    if (buttonReply == nullptr)
-    {
-        DN_LOG_ERROR(L"args is not a IToastActivatedEventArgs");
-        return S_OK;
-    }
-
-    invokeJSCallback("click");
-
-    return S_OK;
-}
-
-// DesktopToastDismissedEventHandler
-IFACEMETHODIMP DesktopNotification::Invoke(_In_ IToastNotification * /* sender */,
-                                           _In_ IToastDismissedEventArgs *e)
-{
-    ToastDismissalReason tdr;
-    HRESULT hr = e->get_Reason(&tdr);
-    if (SUCCEEDED(hr))
-    {
-        switch (tdr)
-        {
-        case ToastDismissalReason_ApplicationHidden:
-            invokeJSCallback("hidden");
-            break;
-        case ToastDismissalReason_UserCanceled:
-            invokeJSCallback("dismissed");
-            break;
-        case ToastDismissalReason_TimedOut:
-            invokeJSCallback("timedout");
-            break;
-        }
-    }
-    return S_OK;
-}
-
-// DesktopToastFailedEventHandler
-IFACEMETHODIMP DesktopNotification::Invoke(_In_ IToastNotification * /* sender */,
-                                           _In_ IToastFailedEventArgs * /* e */)
-{
-    DN_LOG_ERROR(L"The toast encountered an error.");
-    invokeJSCallback("error");
-    return S_OK;
-}
-
-void DesktopNotification::invokeJSCallback(std::string eventName)
-{
-    auto cb = [eventName](Napi::Env env, Napi::Function jsCallback)
-    {
-        jsCallback.Call({Napi::String::New(env, eventName)});
-    };
-
-    m_callback.BlockingCall(cb);
 }
 
 // Set the values of each of the text nodes
@@ -116,27 +43,16 @@ HRESULT DesktopNotification::setTextValues()
     return setNodeValueString(HStringReference(m_body.c_str()).Get(), textNode.Get());
 }
 
-HRESULT DesktopNotification::startListeningEvents()
+HRESULT DesktopNotification::startListeningEvents(DesktopNotificationsManager *desktopNotificationsManager)
 {
     ComPtr<IToastNotification> toast = m_notification;
 
     // Register the event handlers
-    DN_RETURN_ON_ERROR(toast->add_Activated(this, &m_activatedToken));
-    DN_RETURN_ON_ERROR(toast->add_Dismissed(this, &m_dismissedToken));
-    DN_RETURN_ON_ERROR(toast->add_Failed(this, &m_failedToken));
+    DN_RETURN_ON_ERROR(toast->add_Activated(desktopNotificationsManager, &m_activatedToken));
+    DN_RETURN_ON_ERROR(toast->add_Dismissed(desktopNotificationsManager, &m_dismissedToken));
+    DN_RETURN_ON_ERROR(toast->add_Failed(desktopNotificationsManager, &m_failedToken));
 
     return S_OK;
-}
-
-void DesktopNotification::stopListeningEvents()
-{
-    if (m_notification)
-    {
-        ComPtr<IToastNotification> toast = m_notification;
-        toast->remove_Activated(m_activatedToken);
-        toast->remove_Dismissed(m_dismissedToken);
-        toast->remove_Failed(m_failedToken);
-    }
 }
 
 HRESULT DesktopNotification::setNodeValueString(const HSTRING &inputString, IXmlNode *node)
@@ -201,14 +117,15 @@ std::wstring DesktopNotification::formatAction(
     const std::vector<std::pair<std::wstring, std::wstring>> &extraData = {}) const
 {
     std::vector<std::pair<std::wstring, std::wstring>> data = {
-        {L"action", action},
-        {L"notificationId", m_id}};
+        {kActionAttribute, action},
+        {kNotificationIDAttribute, m_id}};
     data.insert(data.end(), extraData.cbegin(), extraData.cend());
     return Utils::formatData(data);
 }
 
 // Create and display the toast
-HRESULT DesktopNotification::createToast(ComPtr<IToastNotificationManagerStatics> toastManager)
+HRESULT DesktopNotification::createToast(ComPtr<IToastNotificationManagerStatics> toastManager,
+                                         DesktopNotificationsManager *desktopNotificationsManager)
 {
     DN_RETURN_ON_ERROR(toastManager->GetTemplateContent(
         ToastTemplateType_ToastImageAndText02, &m_toastXml));
@@ -222,7 +139,7 @@ HRESULT DesktopNotification::createToast(ComPtr<IToastNotificationManagerStatics
     DN_RETURN_ON_ERROR(root->get_Attributes(&rootAttributes));
 
     const auto data = formatAction(L"clicked");
-    DN_RETURN_ON_ERROR(addAttribute(L"launch", rootAttributes.Get(), data));
+    DN_RETURN_ON_ERROR(addAttribute(kLaunchAttribute, rootAttributes.Get(), data));
     DN_RETURN_ON_ERROR(setTextValues());
 
     // printXML();
@@ -252,7 +169,7 @@ HRESULT DesktopNotification::createToast(ComPtr<IToastNotificationManagerStatics
     switch (setting)
     {
     case NotificationSetting_Enabled:
-        DN_RETURN_ON_ERROR(startListeningEvents());
+        DN_RETURN_ON_ERROR(startListeningEvents(desktopNotificationsManager));
         break;
     case NotificationSetting_DisabledForApplication:
         error = L"DisabledForApplication";
@@ -276,4 +193,24 @@ HRESULT DesktopNotification::createToast(ComPtr<IToastNotificationManagerStatics
         DN_LOG_ERROR(err.str());
     }
     return m_notifier->Show(m_notification.Get());
+}
+
+std::string DesktopNotification::getNotificationIDFromToast(IToastNotification *toast)
+{
+    IXmlDocument *xmlDoc = nullptr;
+    toast->get_Content(&xmlDoc);
+    if (xmlDoc == nullptr)
+    {
+        DN_LOG_ERROR(L"Could not get xml document from toast");
+        return "";
+    }
+
+    // Get "launch" attribute and split it to obtain the notification ID
+    HSTRING launchArgs;
+    IXmlElement *rootElement = nullptr;
+    xmlDoc->get_DocumentElement(&rootElement);
+    rootElement->GetAttribute(HStringReference(kLaunchAttribute.c_str()).Get(), &launchArgs);
+    std::wstring launchData = WindowsGetStringRawBuffer(launchArgs, nullptr);
+    const auto launchDataMap = Utils::splitData(launchData);
+    return Utils::wideCharToUTF8(launchDataMap.at(kNotificationIDAttribute));
 }

@@ -1,40 +1,29 @@
+import QuickLRU from 'quick-lru'
 import { v4 as uuidv4 } from 'uuid'
 
+// Windows-only for now
 const nativeModule =
   process.platform === 'win32'
     ? require('../../build/Release/desktop-notifications.node')
     : null
 
 export function initializeNotifications(toastActivatorClsid: string) {
-  if (!nativeModule) {
-    // this code is a no-op when the module is missing
-    return
-  }
-
-  nativeModule.initializeNotifications(toastActivatorClsid)
+  nativeModule?.initializeNotifications(
+    toastActivatorClsid,
+    onNotificationEvent
+  )
 }
 
 export function terminateNotifications() {
-  if (!nativeModule) {
-    // this code is a no-op when the module is missing
-    return
-  }
-
-  nativeModule.terminateNotifications()
+  nativeModule?.terminateNotifications()
 }
 
 function showNotification(
   id: string,
   title: string,
-  body: string,
-  callback: (event: string) => void
+  body: string
 ): number | null {
-  if (!nativeModule) {
-    // this code is a no-op when the module is missing
-    return null
-  }
-
-  return nativeModule.showNotification(id, title, body, callback)
+  return nativeModule?.showNotification(id, title, body) ?? null
 }
 
 function closeNotification(id: string) {
@@ -46,6 +35,25 @@ function closeNotification(id: string) {
   return nativeModule.closeNotification(id)
 }
 
+type DesktopNotificationEvent = 'click'
+
+const shownNotifications = new QuickLRU<string, DesktopNotification>({
+  maxSize: 200,
+})
+
+function onNotificationEvent(event: DesktopNotificationEvent, id: string) {
+  const notification = shownNotifications.get(id)
+  if (notification === undefined) {
+    // TODO: handle notifications that are not in the cache
+    return
+  }
+
+  if (event === 'click') {
+    notification.onclick?.()
+  }
+  // TODO: handle other events?
+}
+
 export class DesktopNotification {
   public onclick?: () => void
   private readonly id: string
@@ -55,14 +63,12 @@ export class DesktopNotification {
   }
 
   public show() {
-    showNotification(this.id, this.title, this.body, (event: string) => {
-      if (event === 'click') {
-        this.onclick?.()
-      }
-    })
+    shownNotifications.set(this.id, this)
+    showNotification(this.id, this.title, this.body)
   }
 
   public close() {
+    shownNotifications.delete(this.id)
     closeNotification(this.id)
   }
 }

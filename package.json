@@ -39,7 +39,6 @@
     "@types/uuid": "^8.3.4",
     "benchmark": "^2.1.4",
     "jest": "^26.4.2",
-    "node-abi": "^2.21.0",
     "prebuild": "^11.0.2",
     "prettier": "^2.0.5",
     "ts-node": "^9.0.0",
@@ -48,6 +47,7 @@
   "dependencies": {
     "node-addon-api": "^4.3.0",
     "prebuild-install": "^7.0.1",
+    "quick-lru": "^3.0.0",
     "uuid": "^8.3.2"
   },
   "binary": {
