@@ -1,11 +1,23 @@
 import QuickLRU from 'quick-lru'
 import { v4 as uuidv4 } from 'uuid'
+import * as os from 'os'
+
+export function supportsNotifications() {
+  if (process.platform !== 'win32') {
+    return false
+  }
+
+  const versionComponents = os.release().split('.')
+  const majorVersion = parseInt(versionComponents[0], 10)
+
+  // Only Windows 10 and newer are supported
+  return majorVersion >= 10
+}
 
 // Windows-only for now
-const nativeModule =
-  process.platform === 'win32'
-    ? require('../../build/Release/desktop-notifications.node')
-    : null
+const nativeModule = supportsNotifications()
+  ? require('../../build/Release/desktop-notifications.node')
+  : null
 
 export function initializeNotifications(toastActivatorClsid: string) {
   nativeModule?.initializeNotifications(
