@@ -3,6 +3,10 @@ import { v4 as uuidv4 } from 'uuid'
 import * as os from 'os'
 
 export function supportsNotifications() {
+  if (process.platform === 'darwin') {
+    return true
+  }
+
   if (process.platform !== 'win32') {
     return false
   }
