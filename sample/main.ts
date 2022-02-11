@@ -2,9 +2,12 @@ import {
   initializeNotifications,
   terminateNotifications,
   DesktopNotification,
+  getNotificationsPermission,
 } from '../lib/desktop-notifications'
 ;(async () => {
   initializeNotifications('{27D44D0C-A542-5B90-BCDB-AC3126048BA2}')
+
+  console.log(`Notifications permission: ${getNotificationsPermission()}`)
 
   const n1 = new DesktopNotification('First notification', 'This is a test')
   n1.onclick = () => {

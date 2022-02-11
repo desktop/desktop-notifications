@@ -47,6 +47,12 @@ export function terminateNotifications() {
   getNativeModule()?.terminateNotifications()
 }
 
+type DesktopNotificationPermission = 'default' | 'granted' | 'denied'
+
+export function getNotificationsPermission(): DesktopNotificationPermission {
+  return getNativeModule()?.getNotificationsPermission()
+}
+
 function showNotification(
   id: string,
   title: string,

@@ -134,12 +134,28 @@ namespace
     return env.Undefined();
   }
 
+  Napi::Value getNotificationsPermission(const Napi::CallbackInfo &info)
+  {
+    Napi::Env &env = info.Env();
+
+    if (!desktopNotificationsManager)
+    {
+      DN_LOG_ERROR("Cannot show notification: notifications not initialized.");
+      return env.Undefined();
+    }
+
+    const std::string permission = desktopNotificationsManager->getCurrentPermission();
+
+    return Napi::String::New(env, permission);
+  }
+
   Napi::Object Init(Napi::Env env, Napi::Object exports)
   {
     exports.Set(Napi::String::New(env, "initializeNotifications"), Napi::Function::New(env, initializeNotifications));
     exports.Set(Napi::String::New(env, "terminateNotifications"), Napi::Function::New(env, terminateNotifications));
     exports.Set(Napi::String::New(env, "showNotification"), Napi::Function::New(env, showNotification));
     exports.Set(Napi::String::New(env, "closeNotification"), Napi::Function::New(env, closeNotification));
+    exports.Set(Napi::String::New(env, "getNotificationsPermission"), Napi::Function::New(env, getNotificationsPermission));
 
     return exports;
   }

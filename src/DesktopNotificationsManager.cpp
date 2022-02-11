@@ -159,6 +159,26 @@ HRESULT DesktopNotificationsManager::UnregisterClassObjects()
     return hr;
 }
 
+const std::string DesktopNotificationsManager::getCurrentPermission()
+{
+    Microsoft::WRL::ComPtr<ABI::Windows::UI::Notifications::IToastNotifier> notifier;
+    if (!DN_CHECK_RESULT(m_toastManager->CreateToastNotifierWithId(
+            HStringReference(m_appID.c_str()).Get(), &notifier)))
+    {
+        DN_LOG_ERROR("Failed to create a ToastNotifier to ensure your appId is registered");
+        return "default";
+    }
+
+    NotificationSetting setting = NotificationSetting_Enabled;
+    if (!DN_CHECK_RESULT(notifier->get_Setting(&setting)))
+    {
+        DN_LOG_ERROR("Failed to retreive NotificationSettings to ensure your appId is registered");
+        return "default";
+    }
+
+    return (setting == NotificationSetting_Enabled ? "granted" : "denied");
+}
+
 ComPtr<IToastNotificationHistory> DesktopNotificationsManager::getHistory()
 {
     ComPtr<IToastNotificationManagerStatics2> toastStatics2;
