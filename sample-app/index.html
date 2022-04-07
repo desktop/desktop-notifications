@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'">
+    <meta http-equiv="X-Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'">
+    <title>Desktop Notifications</title>
+  </head>
+  <body>
+    <h1>Desktop Notifications</h1>
+    <p>This is a sample app to test the package desktop-notifications.</p>
+    <button id="checkPermissionsButton">Check notification permissions</button>
+    <button id="requestPermissionsButton">Request notification permissions</button>
+    <button id="showNotificationButton">Show notification</button>
+
+    <script src="./dist/renderer.js"></script>
+
+  </body>
+</html>
