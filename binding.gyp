@@ -39,7 +39,9 @@
         }],
         ['OS=="mac"', {
           'sources': [
-            'src/main_mac.mm'
+            'src/mac/main_mac.mm',
+            'src/mac/GHDesktopNotificationsManager.m',
+            'src/mac/Utils.m',
           ],
           'libraries': [
             '$(SDKROOT)/System/Library/Frameworks/UserNotifications.framework',

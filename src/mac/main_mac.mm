@@ -13,7 +13,13 @@
 
 #import <UserNotifications/UserNotifications.h>
 
+#import "GHDesktopNotificationsManager.h"
+#import "Utils.h"
+
 using namespace Napi;
+
+GHDesktopNotificationsManager *desktopNotificationsManager = nil;
+Napi::ThreadSafeFunction notificationsCallback;
 
 namespace
 {
@@ -23,7 +29,10 @@ namespace
   {
     const Napi::Env &env = info.Env();
 
-    std::cout << "initializeNotifications - start" << std::endl;
+    if (desktopNotificationsManager)
+    {
+      return env.Undefined();
+    }
 
     if (info.Length() < 2)
     {
@@ -31,7 +40,8 @@ namespace
       return env.Undefined();
     }
 
-    // The first parameter is the toast activator CLSID for Windows, which could be ignored.
+    // We can ignore the first argument, it's an id for Windows notifications
+    // TODO: encapsulate these parameters in an object
 
     if (!info[1].IsFunction())
     {
@@ -39,11 +49,41 @@ namespace
       return env.Undefined();
     }
 
-    //auto callback = info[1].As<Napi::Function>();
-    //notificationCallback = Napi::ThreadSafeFunction::New(callback.Env(), callback, "Notification Callback", 0, 1);
-    std::cout << "initializeNotifications - end" << std::endl;
+    auto callback = info[1].As<Napi::Function>();
 
-    return env.Undefined();
+    notificationsCallback = Napi::ThreadSafeFunction::New(callback.Env(), callback, "Notification Callback", 0, 1);
+
+    desktopNotificationsManager = [GHDesktopNotificationsManager new];
+    desktopNotificationsManager.completionHandler = ^(NSString *event, NSString *identifier, NSDictionary *userInfo, dispatch_block_t completionHandler) {
+
+      // Retain manually all the stuff needed in the callback
+      [userInfo retain];
+      [identifier retain];
+      [event retain];
+      [completionHandler retain];
+
+      auto cb = [event, identifier, userInfo, completionHandler](Napi::Env env, Napi::Function jsCallback)
+      {
+        jsCallback.Call({
+          Napi::String::New(env, event.UTF8String),
+          Napi::String::New(env, identifier.UTF8String),
+          getNapiValueFromObject(env, userInfo),
+        });
+
+        // Invoke the OS completion handler
+        completionHandler();
+
+        // Auto-release all the stuff manually retained
+        [userInfo autorelease];
+        [identifier autorelease];
+        [event autorelease];
+        [completionHandler autorelease];
+      };
+
+      notificationsCallback.BlockingCall(cb);
+    };
+
+    return info.Env().Undefined();
   }
 
   Napi::Value terminateNotifications(const Napi::CallbackInfo &info)
@@ -58,7 +98,6 @@ namespace
   Napi::Value showNotification(const Napi::CallbackInfo &info)
   {
     const Napi::Env &env = info.Env();
-    std::cout << "showNotification - start" << std::endl;
 
     if (info.Length() < 3)
     {
@@ -91,13 +130,17 @@ namespace
     NSString *body = [NSString stringWithCString:info[2].As<Napi::String>().Utf8Value().c_str()
                                         encoding:[NSString defaultCStringEncoding]];
 
-    std::cout << "showNotification - 1 " << std::endl;
-    NSLog(@"FROM NSLOG: %@ %@ %@", notificationID, title, body);
-
     UNMutableNotificationContent* content = [[UNMutableNotificationContent alloc] init];
     content.title = [NSString localizedUserNotificationStringForKey:title arguments:nil];
     content.body = [NSString localizedUserNotificationStringForKey:body arguments:nil];
-    std::cout << "showNotification - 2 " << std::endl;
+    content.userInfo = @{
+      @"type": @"pr-review-submit-fake",
+      @"myBool": @YES,
+      @"myNumber": @42,
+      @"myString": @"Hello world!",
+      @"myArray": @[@"one", @2, @"three"],
+      @"myDict": @{@"foo": @"bar"},
+    };
 
     // Create the request object.
     UNNotificationRequest* request = [UNNotificationRequest
@@ -108,25 +151,18 @@ namespace
     [center
      requestAuthorizationWithOptions:UNAuthorizationOptionBadge | UNAuthorizationOptionSound | UNAuthorizationOptionAlert
      completionHandler:^(BOOL granted, NSError *error) {
-    std::cout << "showNotification - 4 " << std::endl;
 
         if (error != nil) {
-            // Handle the error here.
-            NSLog(@"error requesting permission %@", error);
+            NSLog(@"Error requesting permission %@", error);
             return;
         }
-    std::cout << "showNotification - 5 " << std::endl;
 
-        // Enable or disable features based on the authorization.
         [center addNotificationRequest:request withCompletionHandler:^(NSError * _Nullable error) {
-    std::cout << "showNotification - 7 " << std::endl;
           if (error != nil) {
-              NSLog(@"%@", error.localizedDescription);
+              NSLog(@"Error posting notification: %@", error.localizedDescription);
           }
         }];
-    std::cout << "showNotification - 6 " << std::endl;
     }];
-    std::cout << "showNotification - 3 " << std::endl;
 
     return env.Undefined();
   }

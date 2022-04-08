@@ -75,7 +75,11 @@ const shownNotifications = new QuickLRU<string, DesktopNotification>({
   maxSize: 200,
 })
 
-function onNotificationEvent(event: DesktopNotificationEvent, id: string) {
+function onNotificationEvent(
+  event: DesktopNotificationEvent,
+  id: string,
+  userInfo: Record<string, any>
+) {
   const notification = shownNotifications.get(id)
   if (notification === undefined) {
     // TODO: handle notifications that are not in the cache
