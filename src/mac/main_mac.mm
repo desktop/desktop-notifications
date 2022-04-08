@@ -86,15 +86,6 @@ namespace
     return info.Env().Undefined();
   }
 
-  Napi::Value terminateNotifications(const Napi::CallbackInfo &info)
-  {
-    const Napi::Env &env = info.Env();
-
-    // Do nothing
-
-    return env.Undefined();
-  }
-
   Napi::Value showNotification(const Napi::CallbackInfo &info)
   {
     const Napi::Env &env = info.Env();
@@ -222,12 +213,37 @@ namespace
     return Napi::String::New(env, permission);
   }
 
+  Napi::Value requestNotificationsPermission(const Napi::CallbackInfo &info)
+  {
+    const Napi::Env &env = info.Env();
+
+    UNUserNotificationCenter* center = [UNUserNotificationCenter currentNotificationCenter];
+
+    [center
+     requestAuthorizationWithOptions:UNAuthorizationOptionBadge | UNAuthorizationOptionSound | UNAuthorizationOptionAlert
+     completionHandler:^(BOOL granted, NSError *error) {
+
+        if (error != nil) {
+            NSLog(@"Error requesting permission %@", error);
+            return;
+        }
+
+        [center addNotificationRequest:request withCompletionHandler:^(NSError * _Nullable error) {
+          if (error != nil) {
+              NSLog(@"Error posting notification: %@", error.localizedDescription);
+          }
+        }];
+    }];
+
+    return env.Undefined();
+  }
+
   Napi::Object Init(Napi::Env env, Napi::Object exports)
   {
     exports.Set(Napi::String::New(env, "initializeNotifications"), Napi::Function::New(env, initializeNotifications));
-    exports.Set(Napi::String::New(env, "terminateNotifications"), Napi::Function::New(env, terminateNotifications));
     exports.Set(Napi::String::New(env, "showNotification"), Napi::Function::New(env, showNotification));
     exports.Set(Napi::String::New(env, "closeNotification"), Napi::Function::New(env, closeNotification));
+    exports.Set(Napi::String::New(env, "requestNotificationsPermission"), Napi::Function::New(env, requestNotificationsPermission));
     exports.Set(Napi::String::New(env, "getNotificationsPermission"), Napi::Function::New(env, getNotificationsPermission));
 
     return exports;

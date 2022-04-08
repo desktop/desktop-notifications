@@ -1,4 +1,4 @@
-import { app, BrowserWindow } from 'electron'
+import { app, BrowserWindow, ipcMain } from 'electron'
 import path from 'path'
 import * as url from 'url'
 import {
@@ -30,14 +30,26 @@ const createWindow = () => {
 
 app.whenReady().then(() => {
   createWindow()
-
   initializeNotifications('{27D44D0C-A542-5B90-BCDB-AC3126048BA2}')
 
-  const n1 = new DesktopNotification('First notification', 'This is a test')
-  n1.onclick = () => {
-    console.log('1 was clicked!!!')
-  }
-  n1.show()
+  // const n2 = new DesktopNotification('Second notification', 'This is a test')
+  // n2.onclick = () => {
+  //   console.log('2 was clicked!!!')
+  // }
+  // n2.show()
 
-  console.log('permission?', getNotificationsPermission())
+  ipcMain.on('show-notification', () => {
+    const n2 = new DesktopNotification(
+      'Notification title here',
+      'This is a test'
+    )
+    n2.onclick = () => {
+      console.log('notification was clicked!!!')
+    }
+    n2.show()
+  })
+
+  ipcMain.handle('get-notifications-permission', async () => {
+    return getNotificationsPermission()
+  })
 })
