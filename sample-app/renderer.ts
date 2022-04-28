@@ -1,4 +1,3 @@
-import { initializeNotifications } from 'desktop-notifications'
 import { ipcRenderer } from 'electron'
 
 setupClickEventListener('showNotificationButton', showNotification)
@@ -11,8 +10,6 @@ function setupClickEventListener(id: string, onclick: () => void) {
   }
   element.addEventListener('click', onclick)
 }
-
-initializeNotifications('{27D44D0C-A542-5B90-BCDB-AC3126048BA2}')
 
 function showNotification() {
   ipcRenderer.send('show-notification')

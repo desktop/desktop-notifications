@@ -34,34 +34,24 @@ namespace
       return env.Undefined();
     }
 
-    if (info.Length() < 2)
+    if (info.Length() < 1)
     {
       Napi::TypeError::New(env, "Wrong number of arguments").ThrowAsJavaScriptException();
       return env.Undefined();
     }
 
-    // We can ignore the first argument, it's an id for Windows notifications
-    // TODO: encapsulate these parameters in an object
-
-    if (!info[1].IsFunction())
+    if (!info[0].IsFunction())
     {
       Napi::TypeError::New(env, "Callback must be a function.").ThrowAsJavaScriptException();
       return env.Undefined();
     }
 
-    auto callback = info[1].As<Napi::Function>();
+    auto callback = info[0].As<Napi::Function>();
 
     notificationsCallback = Napi::ThreadSafeFunction::New(callback.Env(), callback, "Notification Callback", 0, 1);
 
     desktopNotificationsManager = [GHDesktopNotificationsManager new];
     desktopNotificationsManager.completionHandler = ^(NSString *event, NSString *identifier, NSDictionary *userInfo, dispatch_block_t completionHandler) {
-
-      // Retain manually all the stuff needed in the callback
-      [userInfo retain];
-      [identifier retain];
-      [event retain];
-      [completionHandler retain];
-
       auto cb = [event, identifier, userInfo, completionHandler](Napi::Env env, Napi::Function jsCallback)
       {
         jsCallback.Call({
@@ -72,12 +62,6 @@ namespace
 
         // Invoke the OS completion handler
         completionHandler();
-
-        // Auto-release all the stuff manually retained
-        [userInfo autorelease];
-        [identifier autorelease];
-        [event autorelease];
-        [completionHandler autorelease];
       };
 
       notificationsCallback.BlockingCall(cb);
@@ -217,25 +201,23 @@ namespace
   {
     const Napi::Env &env = info.Env();
 
+    Napi::Promise::Deferred deferred = Napi::Promise::Deferred::New(env);
+
     UNUserNotificationCenter* center = [UNUserNotificationCenter currentNotificationCenter];
 
     [center
      requestAuthorizationWithOptions:UNAuthorizationOptionBadge | UNAuthorizationOptionSound | UNAuthorizationOptionAlert
      completionHandler:^(BOOL granted, NSError *error) {
 
-        if (error != nil) {
-            NSLog(@"Error requesting permission %@", error);
-            return;
-        }
+      if (error != nil) {
+          NSLog(@"Error requesting permission %@", error);
+          return;
+      }
 
-        [center addNotificationRequest:request withCompletionHandler:^(NSError * _Nullable error) {
-          if (error != nil) {
-              NSLog(@"Error posting notification: %@", error.localizedDescription);
-          }
-        }];
+      deferred.Resolve(Napi::Boolean::New(env, granted));
     }];
 
-    return env.Undefined();
+    return deferred.Promise();
   }
 
   Napi::Object Init(Napi::Env env, Napi::Object exports)

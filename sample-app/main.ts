@@ -30,7 +30,10 @@ const createWindow = () => {
 
 app.whenReady().then(() => {
   createWindow()
-  initializeNotifications('{27D44D0C-A542-5B90-BCDB-AC3126048BA2}')
+
+  initializeNotifications({
+    toastActivatorClsid: '{27D44D0C-A542-5B90-BCDB-AC3126048BA2}',
+  })
 
   // const n2 = new DesktopNotification('Second notification', 'This is a test')
   // n2.onclick = () => {

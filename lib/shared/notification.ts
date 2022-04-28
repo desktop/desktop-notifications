@@ -1,6 +1,9 @@
 import { v4 as uuidv4 } from 'uuid'
 import QuickLRU from 'quick-lru'
-import { closeNotification, showNotification } from '../win32/native-module'
+import * as win32 from '../win32'
+import * as darwin from '../darwin'
+
+const platformModule = process.platform === 'win32' ? win32 : darwin
 
 export const shownNotifications = new QuickLRU<string, DesktopNotification>({
   maxSize: 200,
@@ -19,12 +22,12 @@ export class DesktopNotification {
   /** Shows the notification. */
   public show() {
     shownNotifications.set(this.id, this)
-    showNotification(this.id, this.title, this.body)
+    platformModule.showNotification(this.id, this.title, this.body)
   }
 
   /** Closes the notification if it was ever shown. */
   public close() {
     shownNotifications.delete(this.id)
-    closeNotification(this.id)
+    platformModule.closeNotification(this.id)
   }
 }

@@ -2,8 +2,8 @@
   "name": "desktop-notifications",
   "version": "0.1.7",
   "description": "A simple and opinionated library for handling Windows notifications",
-  "main": "dist/lib/index.js",
-  "typings": "dist/lib/index.d.ts",
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
   "scripts": {
     "install": "prebuild-install || node-gyp rebuild",
     "build": "node-gyp rebuild && tsc",
