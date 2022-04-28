@@ -43,6 +43,11 @@
             'src/mac/GHDesktopNotificationsManager.m',
             'src/mac/Utils.m',
           ],
+          'xcode_settings': {
+              'OTHER_CFLAGS': [
+                  '-fobjc-arc',
+              ],
+          },
           'libraries': [
             '$(SDKROOT)/System/Library/Frameworks/UserNotifications.framework',
           ],
