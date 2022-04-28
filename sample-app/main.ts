@@ -44,7 +44,15 @@ app.whenReady().then(() => {
   ipcMain.on('show-notification', () => {
     const n2 = new DesktopNotification(
       'Notification title here',
-      'This is a test'
+      'This is a test',
+      {
+        js_myDict: { foo: 'bar' },
+        js_myString: 'Hello world!',
+        js_myBool: true,
+        js_myArray: ['one', 2, 'three'],
+        js_type: 'pr-review-submit-fake',
+        js_myNumber: 42,
+      }
     )
     n2.onclick = () => {
       console.log('notification was clicked!!!')

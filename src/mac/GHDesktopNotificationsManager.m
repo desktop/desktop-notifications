@@ -29,18 +29,14 @@
 didReceiveNotificationResponse:(UNNotificationResponse *)response
          withCompletionHandler:(void (^)(void))completionHandler
 {
-  NSLog(@"didReceive 1");
   if (self.completionHandler == nil)
   {
-    NSLog(@"didReceive 2");
     completionHandler();
     return;
   }
 
   UNNotificationRequest *request = response.notification.request;
-  NSLog(@"didReceive 3: %@", request.content.userInfo);
   self.completionHandler(@"click", request.identifier, request.content.userInfo, completionHandler);
-  NSLog(@"didReceive 4");
 }
 
 @end

@@ -15,14 +15,23 @@ export class DesktopNotification {
 
   private readonly id: string
 
-  constructor(public readonly title: string, public readonly body: string) {
+  constructor(
+    public readonly title: string,
+    public readonly body: string,
+    public readonly userInfo?: Record<string, any>
+  ) {
     this.id = uuidv4()
   }
 
   /** Shows the notification. */
   public show() {
     shownNotifications.set(this.id, this)
-    platformModule.showNotification(this.id, this.title, this.body)
+    platformModule.showNotification(
+      this.id,
+      this.title,
+      this.body,
+      this.userInfo
+    )
   }
 
   /** Closes the notification if it was ever shown. */

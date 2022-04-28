@@ -31,7 +31,8 @@ export const getNotificationsPermission: () => DesktopNotificationPermission = (
 export const showNotification: (
   id: string,
   title: string,
-  body: string
+  body: string,
+  userInfo?: Record<string, any>
 ) => number | null = (...args) =>
   getNativeModule()?.showNotification(...args) ?? null
 

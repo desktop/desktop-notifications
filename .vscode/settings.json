@@ -79,6 +79,8 @@
     "iomanip": "cpp",
     "mutex": "cpp",
     "stop_token": "cpp",
-    "thread": "cpp"
+    "thread": "cpp",
+    "__locale": "cpp",
+    "locale": "cpp"
   }
 }

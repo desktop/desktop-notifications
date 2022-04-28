@@ -85,3 +85,45 @@ Napi::Value getNapiValueFromObject(const Napi::Env &env, id value)
 
   return env.Undefined();
 }
+
+id getObjectFromNapiValue(const Napi::Env &env, const Napi::Value &value)
+{
+  if (value.IsString())
+  {
+    return [NSString stringWithUTF8String:value.As<Napi::String>().Utf8Value().c_str()];
+  }
+  else if (value.IsNumber())
+  {
+    return @(value.As<Napi::Number>().DoubleValue());
+  }
+  else if (value.IsBoolean())
+  {
+    return [NSNumber numberWithBool:value.As<Napi::Boolean>().Value()];
+  }
+  else if (value.IsNull())
+  {
+    return [NSNull null];
+  }
+  else if (value.IsObject())
+  {
+    Napi::Object obj = value.As<Napi::Object>();
+    NSMutableDictionary *d = [NSMutableDictionary dictionary];
+    for (auto it = obj.begin(); it != obj.end(); ++it) {
+      auto entry = *it;
+      NSString *key = [NSString stringWithUTF8String:entry.first.As<Napi::String>().Utf8Value().c_str()];
+      d[key] = getObjectFromNapiValue(env, entry.second);
+    }
+    return d;
+  }
+  else if (value.IsArray())
+  {
+    Napi::Array arr = value.As<Napi::Array>();
+    NSMutableArray *a = [NSMutableArray array];
+    for (uint32_t i = 0; i < arr.Length(); i++) {
+      a[i] = getObjectFromNapiValue(env, arr[i]);
+    }
+    return a;
+  }
+
+  return nil;
+}

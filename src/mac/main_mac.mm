@@ -108,14 +108,12 @@ namespace
     UNMutableNotificationContent* content = [[UNMutableNotificationContent alloc] init];
     content.title = [NSString localizedUserNotificationStringForKey:title arguments:nil];
     content.body = [NSString localizedUserNotificationStringForKey:body arguments:nil];
-    content.userInfo = @{
-      @"type": @"pr-review-submit-fake",
-      @"myBool": @YES,
-      @"myNumber": @42,
-      @"myString": @"Hello world!",
-      @"myArray": @[@"one", @2, @"three"],
-      @"myDict": @{@"foo": @"bar"},
-    };
+
+    if (info.Length() > 3 && info[3].IsObject())
+    {
+      auto userInfo = info[3].As<Napi::Object>();
+      content.userInfo = getObjectFromNapiValue(env, userInfo);
+    }
 
     // Create the request object.
     UNNotificationRequest* request = [UNNotificationRequest
