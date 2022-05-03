@@ -1,7 +1,8 @@
-export { DesktopNotification } from './notification'
 export {
   initializeNotifications,
+  showNotification,
+  closeNotification,
   terminateNotifications,
   getNotificationsPermission,
 } from './native-module'
-export { setGlobalNotificationCallback } from './notification-callback'
+export { onNotificationEvent } from './notification-callback'

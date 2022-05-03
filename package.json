@@ -47,7 +47,6 @@
   "dependencies": {
     "node-addon-api": "^4.3.0",
     "prebuild-install": "^7.0.1",
-    "quick-lru": "^3.0.0",
     "uuid": "^8.3.2"
   },
   "binary": {

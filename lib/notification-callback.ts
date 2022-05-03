@@ -1,5 +1,4 @@
 import { DesktopNotificationEvent } from './notification-event-type'
-import { shownNotifications } from './notification'
 
 export type NotificationCallback = (
   event: DesktopNotificationEvent,
@@ -9,28 +8,9 @@ export type NotificationCallback = (
 
 let globalNotificationCallback: NotificationCallback | null = null
 
-export const onNotificationEvent: NotificationCallback = (
-  event: DesktopNotificationEvent,
-  id: string,
-  userInfo: Record<string, any>
-) => {
-  const notification = shownNotifications.get(id)
-  if (notification === undefined) {
-    // Events of notifications that are not in the cache will be handled via the
-    // global callback. We can safely assume those notifications were posted
-    // in a different app session.
-    globalNotificationCallback?.(event, id, userInfo)
-    return
-  }
+export const notificationCallback: NotificationCallback = (...args) =>
+  globalNotificationCallback?.(...args)
 
-  if (event === 'click') {
-    notification.onclick?.()
-  }
-  // TODO: handle other events?
-}
-
-export const setGlobalNotificationCallback = (
-  callback: NotificationCallback | null
-) => {
+export const onNotificationEvent = (callback: NotificationCallback | null) => {
   globalNotificationCallback = callback
 }

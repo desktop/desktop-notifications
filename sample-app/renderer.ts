@@ -1,4 +1,17 @@
 import { ipcRenderer } from 'electron'
+import QuickLRU from 'quick-lru'
+
+const notificationCallbacks = new QuickLRU<string, () => void>({
+  maxSize: 200,
+})
+
+ipcRenderer.on('notification-event', (event, id, userInfo) => {
+  console.log(`[RENDERER] Notification event: ${event} ${id}`, userInfo)
+
+  const callback = notificationCallbacks.get(id)
+  callback?.()
+  notificationCallbacks.delete(id)
+})
 
 setupClickEventListener('showNotificationButton', showNotification)
 setupClickEventListener('checkPermissionsButton', checkPermissions)
@@ -11,8 +24,26 @@ function setupClickEventListener(id: string, onclick: () => void) {
   element.addEventListener('click', onclick)
 }
 
-function showNotification() {
-  ipcRenderer.send('show-notification')
+async function showNotification() {
+  const notificationID = await ipcRenderer.invoke(
+    'show-notification',
+    'Test notification',
+    'This notification is a test. Hello! 👋',
+    {
+      myDict: { foo: 'bar' },
+      myString: 'Hello world!',
+      myBool: true,
+      myArray: ['one', 2, 'three'],
+      type: 'pr-review-submit-fake',
+      myNumber: 42,
+    }
+  )
+
+  console.log('Shown notification with ID:', notificationID)
+
+  notificationCallbacks.set(notificationID, () => {
+    console.log(`[RENDERER] Notification clicked: ${notificationID}`)
+  })
 }
 
 async function checkPermissions() {

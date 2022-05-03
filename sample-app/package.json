@@ -17,6 +17,7 @@
     "start": "NODE_ENV=development webpack --config webpack.main.config.js --mode development && electron ."
   },
   "dependencies": {
-    "desktop-notifications": "../"
+    "desktop-notifications": "../",
+    "quick-lru": "^3.0.0"
   }
 }

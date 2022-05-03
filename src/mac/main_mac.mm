@@ -108,7 +108,6 @@ namespace
     auto bodyUTF16 = info[2].As<Napi::String>().Utf16Value();
     NSString *body = [NSString stringWithCharacters:(const unichar *)bodyUTF16.c_str()
                                              length:bodyUTF16.size()];
-    NSLog(@"the title is '%@' and the body is '%@'", title, body);
 
     UNMutableNotificationContent* content = [[UNMutableNotificationContent alloc] init];
     content.title = [NSString localizedUserNotificationStringForKey:title arguments:nil];
