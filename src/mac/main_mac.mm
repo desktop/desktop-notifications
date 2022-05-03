@@ -102,10 +102,13 @@ namespace
 
     NSString *notificationID = [NSString stringWithCString:info[0].As<Napi::String>().Utf8Value().c_str()
                                                   encoding:[NSString defaultCStringEncoding]];
-    NSString *title = [NSString stringWithCString:info[1].As<Napi::String>().Utf8Value().c_str()
-                                         encoding:[NSString defaultCStringEncoding]];
-    NSString *body = [NSString stringWithCString:info[2].As<Napi::String>().Utf8Value().c_str()
-                                        encoding:[NSString defaultCStringEncoding]];
+    auto titleUTF16 = info[1].As<Napi::String>().Utf16Value();
+    NSString *title = [NSString stringWithCharacters:(const unichar *)titleUTF16.c_str()
+                                              length:titleUTF16.size()];
+    auto bodyUTF16 = info[2].As<Napi::String>().Utf16Value();
+    NSString *body = [NSString stringWithCharacters:(const unichar *)bodyUTF16.c_str()
+                                             length:bodyUTF16.size()];
+    NSLog(@"the title is '%@' and the body is '%@'", title, body);
 
     UNMutableNotificationContent* content = [[UNMutableNotificationContent alloc] init];
     content.title = [NSString localizedUserNotificationStringForKey:title arguments:nil];
