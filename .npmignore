@@ -6,6 +6,7 @@ docs/
 lib/
 script/
 test/
+sample-app/
 .gitattributes
 tsconfig.json
 .yarnrc
