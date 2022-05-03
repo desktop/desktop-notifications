@@ -23,10 +23,10 @@
             "UNICODE",
           ],
           'sources': [
-            'src/main_win.cc',
-            'src/DesktopNotificationsManager.cpp',
-            'src/DesktopNotification.cpp',
-            'src/Utils.cpp'
+            'src/win/main_win.cc',
+            'src/win/DesktopNotificationsManager.cpp',
+            'src/win/DesktopNotification.cpp',
+            'src/win/Utils.cpp'
           ],
           "libraries": [
             "runtimeobject.lib"

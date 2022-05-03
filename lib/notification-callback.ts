@@ -7,21 +7,19 @@ export type NotificationCallback = (
   userInfo: Record<string, any>
 ) => void
 
-let globalCallback: NotificationCallback | null = null
+let globalNotificationCallback: NotificationCallback | null = null
 
 export const onNotificationEvent: NotificationCallback = (
   event: DesktopNotificationEvent,
   id: string,
   userInfo: Record<string, any>
 ) => {
-  console.log(`Notification event: ${event} ${id}`, userInfo)
-
   const notification = shownNotifications.get(id)
   if (notification === undefined) {
     // Events of notifications that are not in the cache will be handled via the
     // global callback. We can safely assume those notifications were posted
     // in a different app session.
-    globalCallback?.(event, id, userInfo)
+    globalNotificationCallback?.(event, id, userInfo)
     return
   }
 
@@ -31,6 +29,8 @@ export const onNotificationEvent: NotificationCallback = (
   // TODO: handle other events?
 }
 
-export const setGlobalCallback = (callback: NotificationCallback | null) => {
-  globalCallback = callback
+export const setGlobalNotificationCallback = (
+  callback: NotificationCallback | null
+) => {
+  globalNotificationCallback = callback
 }

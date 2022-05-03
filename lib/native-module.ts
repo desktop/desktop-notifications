@@ -1,7 +1,23 @@
-import { getNativeModule } from '../shared/native-module'
-import { onNotificationEvent } from '../shared/notification-callback'
-import { DesktopNotificationPermission } from '../shared/notification-permission'
-import { INotificationOptions } from '../shared/notifications-options'
+import { supportsNotifications } from './supports-notifications'
+import { onNotificationEvent } from './notification-callback'
+import { DesktopNotificationPermission } from './notification-permission'
+import { INotificationOptions } from './notifications-options'
+
+// The native binary will be loaded lazily to avoid any possible crash at start
+// time, which are harder to trace.
+let _nativeModule: any | null | undefined = undefined
+
+function getNativeModule(): any | null {
+  if (_nativeModule !== undefined) {
+    return _nativeModule
+  }
+
+  _nativeModule = supportsNotifications()
+    ? require('../build/Release/desktop-notifications.node')
+    : null
+
+  return _nativeModule
+}
 
 /**
  * Initializes the desktop-notifications system.
@@ -11,14 +27,7 @@ import { INotificationOptions } from '../shared/notifications-options'
 export const initializeNotifications: (
   opts: INotificationOptions
 ) => void = opts => {
-  if (opts.toastActivatorClsid === undefined) {
-    throw new Error('toastActivatorClsid is required on Windows')
-  }
-
-  getNativeModule()?.initializeNotifications(
-    opts.toastActivatorClsid,
-    onNotificationEvent
-  )
+  getNativeModule()?.initializeNotifications(onNotificationEvent, opts)
 }
 
 /** Terminates the desktop-notifications system. */

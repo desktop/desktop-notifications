@@ -36,20 +36,28 @@ namespace
       return env.Undefined();
     }
 
-    if (!info[0].IsString())
-    {
-      Napi::TypeError::New(env, "A string was expected for the first argument, but wasn't received.").ThrowAsJavaScriptException();
-      return env.Undefined();
-    }
-
-    if (!info[1].IsFunction())
+    if (!info[0].IsFunction())
     {
       Napi::TypeError::New(env, "Callback must be a function.").ThrowAsJavaScriptException();
       return env.Undefined();
     }
 
-    auto toastActivatorClsid = Utils::utf8ToWideChar(info[0].As<Napi::String>());
-    auto callback = info[1].As<Napi::Function>();
+    if (!info[1].IsObject())
+    {
+      Napi::TypeError::New(env, "An object was expected for the second argument, but wasn't received.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    auto callback = info[0].As<Napi::Function>();
+
+    Napi::Object options = info[1].As<Napi::Object>();
+    if (!options.Has("toastActivatorClsid"))
+    {
+      Napi::TypeError::New(env, "The options object must have the \"toastActivatorClsid\" property.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    auto toastActivatorClsid = Utils::utf8ToWideChar(options.Get("toastActivatorClsid").As<Napi::String>());
 
     desktopNotificationsManager = std::make_shared<DesktopNotificationsManager>(toastActivatorClsid, callback);
 

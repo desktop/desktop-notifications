@@ -34,6 +34,8 @@ namespace
       return env.Undefined();
     }
 
+    // There is a second argument, which is an object with options, but it is
+    // not used on macOS.
     if (info.Length() < 1)
     {
       Napi::TypeError::New(env, "Wrong number of arguments").ThrowAsJavaScriptException();

@@ -5,6 +5,7 @@ import {
   DesktopNotification,
   getNotificationsPermission,
   initializeNotifications,
+  setGlobalNotificationCallback,
 } from 'desktop-notifications'
 
 const createWindow = () => {
@@ -33,6 +34,10 @@ app.whenReady().then(() => {
 
   initializeNotifications({
     toastActivatorClsid: '{27D44D0C-A542-5B90-BCDB-AC3126048BA2}',
+  })
+
+  setGlobalNotificationCallback((event, id, userInfo) => {
+    console.log(`[GLOBAL] Notification event: ${event} ${id}`, userInfo)
   })
 
   // const n2 = new DesktopNotification('Second notification', 'This is a test')
