@@ -153,7 +153,7 @@ namespace
     if (!desktopNotificationsManager)
     {
       DN_LOG_ERROR("Cannot show notification: notifications not initialized.");
-      deferred.Resolve("default");
+      deferred.Resolve(Napi::String::New(env, "default"));
     }
     else
     {
