@@ -14,7 +14,11 @@ ipcRenderer.on('notification-event', (event, id, userInfo) => {
 })
 
 setupClickEventListener('showNotificationButton', showNotification)
-setupClickEventListener('checkPermissionsButton', checkPermissions)
+setupClickEventListener('checkPermissionsButton', checkNotificationsPermission)
+setupClickEventListener(
+  'requestPermissionsButton',
+  requestNotificationsPermission
+)
 
 function setupClickEventListener(id: string, onclick: () => void) {
   const element = document.getElementById(id)
@@ -46,9 +50,16 @@ async function showNotification() {
   })
 }
 
-async function checkPermissions() {
+async function checkNotificationsPermission() {
   console.log(
     'checkPermissions',
     await ipcRenderer.invoke('get-notifications-permission')
+  )
+}
+
+async function requestNotificationsPermission() {
+  console.log(
+    'requestPermissions',
+    await ipcRenderer.invoke('request-notifications-permission')
   )
 }

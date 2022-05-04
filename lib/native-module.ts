@@ -1,7 +1,7 @@
-import { supportsNotifications } from './supports-notifications'
+import { supportsNotifications } from './notification-support'
 import { notificationCallback } from './notification-callback'
 import { DesktopNotificationPermission } from './notification-permission'
-import { INotificationOptions } from './notifications-options'
+import { INotificationOptions } from './notification-options'
 import { v4 as uuidv4 } from 'uuid'
 
 // The native binary will be loaded lazily to avoid any possible crash at start
@@ -34,8 +34,12 @@ export const initializeNotifications: (
 export const terminateNotifications: () => void = () =>
   getNativeModule()?.terminateNotifications()
 
-export const getNotificationsPermission: () => DesktopNotificationPermission = () =>
-  getNativeModule()?.getNotificationsPermission()
+export const getNotificationsPermission: () => Promise<
+  DesktopNotificationPermission
+> = () => getNativeModule()?.getNotificationsPermission()
+
+export const requestNotificationsPermission: () => Promise<boolean> = () =>
+  getNativeModule()?.requestNotificationsPermission()
 
 export const showNotification: (
   title: string,

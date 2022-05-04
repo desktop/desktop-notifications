@@ -6,6 +6,7 @@ import {
   initializeNotifications,
   showNotification,
   onNotificationEvent,
+  requestNotificationsPermission,
 } from 'desktop-notifications'
 
 const createWindow = () => {
@@ -49,7 +50,10 @@ app.whenReady().then(() => {
     }
   )
 
-  ipcMain.handle('get-notifications-permission', async () => {
-    return getNotificationsPermission()
-  })
+  ipcMain.handle('get-notifications-permission', getNotificationsPermission)
+
+  ipcMain.handle(
+    'request-notifications-permission',
+    requestNotificationsPermission
+  )
 })

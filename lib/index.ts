@@ -4,6 +4,10 @@ export {
   closeNotification,
   terminateNotifications,
   getNotificationsPermission,
+  requestNotificationsPermission,
 } from './native-module'
-export { supportsNotifications } from './supports-notifications'
+export {
+  supportsNotifications,
+  supportsNotificationsPermissionRequest,
+} from './notification-support'
 export { onNotificationEvent } from './notification-callback'

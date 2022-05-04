@@ -15,3 +15,7 @@ export function supportsNotifications() {
   // Only Windows 10 and newer are supported
   return majorVersion >= 10
 }
+
+export function supportsNotificationsPermissionRequest() {
+  return process.platform === 'darwin'
+}

@@ -146,15 +146,29 @@ namespace
   {
     Napi::Env &env = info.Env();
 
+    Napi::Promise::Deferred deferred = Napi::Promise::Deferred::New(env);
+
     if (!desktopNotificationsManager)
     {
       DN_LOG_ERROR("Cannot show notification: notifications not initialized.");
-      return env.Undefined();
+      deferred.Resolve("default");
+    }
+    else
+    {
+      const std::string permission = desktopNotificationsManager->getCurrentPermission();
+      deferred.Resolve(Napi::String::New(env, permission));
     }
 
-    const std::string permission = desktopNotificationsManager->getCurrentPermission();
+    return deferred.Promise();
+  }
 
-    return Napi::String::New(env, permission);
+  Napi::Value requestNotificationsPermission(const Napi::CallbackInfo &info)
+  {
+    Napi::Env &env = info.Env();
+
+    // Do nothing. There is no way of requesting permission on Windows.
+
+    return Napi::Boolean::New(env, true);
   }
 
   Napi::Object Init(Napi::Env env, Napi::Object exports)
@@ -164,13 +178,10 @@ namespace
     exports.Set(Napi::String::New(env, "showNotification"), Napi::Function::New(env, showNotification));
     exports.Set(Napi::String::New(env, "closeNotification"), Napi::Function::New(env, closeNotification));
     exports.Set(Napi::String::New(env, "getNotificationsPermission"), Napi::Function::New(env, getNotificationsPermission));
+    exports.Set(Napi::String::New(env, "requestNotificationsPermission"), Napi::Function::New(env, requestNotificationsPermission));
 
     return exports;
   }
 }
 
-#if NODE_MAJOR_VERSION >= 10
-NAN_MODULE_WORKER_ENABLED(desktopNotificationsNativeModule, Init)
-#else
 NODE_API_MODULE(desktopNotificationsNativeModule, Init);
-#endif

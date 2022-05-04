@@ -21,6 +21,11 @@ using namespace Napi;
 GHDesktopNotificationsManager *desktopNotificationsManager = nil;
 Napi::ThreadSafeFunction notificationsCallback;
 
+// Dummy value to pass into function parameter for ThreadSafeFunction.
+Napi::Value NoOp(const Napi::CallbackInfo &info) {
+  return info.Env().Undefined();
+}
+
 namespace
 {
   Napi::ThreadSafeFunction notificationCallback;
@@ -174,12 +179,15 @@ namespace
   {
     const Napi::Env &env = info.Env();
 
-    dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
-    __block std::string permission = "default";
+    Napi::Promise::Deferred deferred = Napi::Promise::Deferred::New(env);
+    Napi::ThreadSafeFunction ts_fn = Napi::ThreadSafeFunction::New(
+      env, Napi::Function::New(env, NoOp), "getNotificationsPermissionCallback", 0, 1);
 
+    __block Napi::ThreadSafeFunction tsfn = ts_fn;
     UNUserNotificationCenter* center = [UNUserNotificationCenter currentNotificationCenter];
     [center getNotificationSettingsWithCompletionHandler:^(UNNotificationSettings *settings) {
-      dispatch_semaphore_signal(semaphore);
+
+      std::string permission = "default";
 
       if (settings.authorizationStatus == UNAuthorizationStatusNotDetermined)
       {
@@ -193,11 +201,15 @@ namespace
       {
         permission = "granted";
       }
+
+      auto callback = [permission, deferred](Napi::Env env, Napi::Function js_cb) {
+        deferred.Resolve(Napi::String::New(env, permission));
+      };
+      tsfn.BlockingCall(callback);
+      tsfn.Release();
     }];
 
-    dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
-
-    return Napi::String::New(env, permission);
+    return deferred.Promise();
   }
 
   Napi::Value requestNotificationsPermission(const Napi::CallbackInfo &info)
@@ -205,19 +217,25 @@ namespace
     const Napi::Env &env = info.Env();
 
     Napi::Promise::Deferred deferred = Napi::Promise::Deferred::New(env);
+    Napi::ThreadSafeFunction ts_fn = Napi::ThreadSafeFunction::New(
+      env, Napi::Function::New(env, NoOp), "getNotificationsPermissionCallback", 0, 1);
 
     UNUserNotificationCenter* center = [UNUserNotificationCenter currentNotificationCenter];
 
+    __block Napi::ThreadSafeFunction tsfn = ts_fn;
     [center
      requestAuthorizationWithOptions:UNAuthorizationOptionBadge | UNAuthorizationOptionSound | UNAuthorizationOptionAlert
      completionHandler:^(BOOL granted, NSError *error) {
 
       if (error != nil) {
           NSLog(@"Error requesting permission %@", error);
-          return;
       }
 
-      deferred.Resolve(Napi::Boolean::New(env, granted));
+      auto callback = [granted, deferred](Napi::Env env, Napi::Function js_cb) {
+        deferred.Resolve(Napi::Boolean::New(env, granted));
+      };
+      tsfn.BlockingCall(callback);
+      tsfn.Release();
     }];
 
     return deferred.Promise();
@@ -230,13 +248,10 @@ namespace
     exports.Set(Napi::String::New(env, "closeNotification"), Napi::Function::New(env, closeNotification));
     exports.Set(Napi::String::New(env, "requestNotificationsPermission"), Napi::Function::New(env, requestNotificationsPermission));
     exports.Set(Napi::String::New(env, "getNotificationsPermission"), Napi::Function::New(env, getNotificationsPermission));
+    exports.Set(Napi::String::New(env, "requestNotificationsPermission"), Napi::Function::New(env, requestNotificationsPermission));
 
     return exports;
   }
 }
 
-#if NODE_MAJOR_VERSION >= 10
-NAN_MODULE_WORKER_ENABLED(desktopNotificationsNativeModule, Init)
-#else
 NODE_API_MODULE(desktopNotificationsNativeModule, Init);
-#endif
