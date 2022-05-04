@@ -45,9 +45,13 @@ export const showNotification: (
   title: string,
   body: string,
   userInfo?: Record<string, any>
-) => string = (...args) => {
+) => Promise<string | null> = async (...args) => {
   const id = uuidv4()
-  getNativeModule()?.showNotification(id, ...args) ?? null
+  try {
+    await getNativeModule()?.showNotification(id, ...args)
+  } catch (e) {
+    return null
+  }
   return id
 }
 

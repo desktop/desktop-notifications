@@ -110,7 +110,9 @@ namespace
 
     desktopNotificationsManager->displayToast(id, title, body);
 
-    return env.Undefined();
+    Napi::Promise::Deferred deferred = Napi::Promise::Deferred::New(env);
+    deferred.Resolve(env.Undefined());
+    return deferred.Promise();
   }
 
   Napi::Value closeNotification(const Napi::CallbackInfo &info)
@@ -167,8 +169,9 @@ namespace
     Napi::Env &env = info.Env();
 
     // Do nothing. There is no way of requesting permission on Windows.
-
-    return Napi::Boolean::New(env, true);
+    Napi::Promise::Deferred deferred = Napi::Promise::Deferred::New(env);
+    deferred.Resolve(Napi::Boolean::New(env, true));
+    return deferred.Promise();
   }
 
   Napi::Object Init(Napi::Env env, Napi::Object exports)

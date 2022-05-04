@@ -129,25 +129,49 @@ namespace
     UNNotificationRequest* request = [UNNotificationRequest
           requestWithIdentifier:notificationID content:content trigger:nil];
 
+    Napi::Promise::Deferred deferred = Napi::Promise::Deferred::New(env);
+    Napi::ThreadSafeFunction ts_fn = Napi::ThreadSafeFunction::New(
+      env, Napi::Function::New(env, NoOp), "showNotificationCallback", 0, 1);
+
     UNUserNotificationCenter* center = [UNUserNotificationCenter currentNotificationCenter];
+    __block Napi::ThreadSafeFunction tsfn = ts_fn;
 
     [center
      requestAuthorizationWithOptions:UNAuthorizationOptionBadge | UNAuthorizationOptionSound | UNAuthorizationOptionAlert
      completionHandler:^(BOOL granted, NSError *error) {
 
-        if (error != nil) {
-            NSLog(@"Error requesting permission %@", error);
+        if (error != nil || !granted) {
+            NSLog(@"Permission to display notification wasn't granted: %@", error);
+
+            auto callback = [deferred](Napi::Env env, Napi::Function js_cb) {
+              deferred.Reject(env.Undefined());
+            };
+            tsfn.BlockingCall(callback);
+            tsfn.Release();
             return;
         }
 
         [center addNotificationRequest:request withCompletionHandler:^(NSError * _Nullable error) {
           if (error != nil) {
               NSLog(@"Error posting notification: %@", error.localizedDescription);
+
+              auto callback = [deferred](Napi::Env env, Napi::Function js_cb) {
+                deferred.Reject(env.Undefined());
+              };
+              tsfn.BlockingCall(callback);
+              tsfn.Release();
+              return;
           }
+
+            auto callback = [deferred](Napi::Env env, Napi::Function js_cb) {
+              deferred.Resolve(env.Undefined());
+            };
+            tsfn.BlockingCall(callback);
+            tsfn.Release();
         }];
     }];
 
-    return env.Undefined();
+    return deferred.Promise();
   }
 
   Napi::Value closeNotification(const Napi::CallbackInfo &info)
@@ -218,7 +242,7 @@ namespace
 
     Napi::Promise::Deferred deferred = Napi::Promise::Deferred::New(env);
     Napi::ThreadSafeFunction ts_fn = Napi::ThreadSafeFunction::New(
-      env, Napi::Function::New(env, NoOp), "getNotificationsPermissionCallback", 0, 1);
+      env, Napi::Function::New(env, NoOp), "requestNotificationsPermissionCallback", 0, 1);
 
     UNUserNotificationCenter* center = [UNUserNotificationCenter currentNotificationCenter];
 
