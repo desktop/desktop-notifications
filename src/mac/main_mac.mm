@@ -112,6 +112,7 @@ namespace
     UNMutableNotificationContent* content = [[UNMutableNotificationContent alloc] init];
     content.title = [NSString localizedUserNotificationStringForKey:title arguments:nil];
     content.body = [NSString localizedUserNotificationStringForKey:body arguments:nil];
+    content.sound = [UNNotificationSound defaultSound];
 
     if (info.Length() > 3 && info[3].IsObject())
     {

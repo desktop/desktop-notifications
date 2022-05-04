@@ -42,12 +42,6 @@ app.whenReady().then(() => {
     window.webContents.send('notification-event', event, id, userInfo)
   })
 
-  // const n2 = new DesktopNotification('Second notification', 'This is a test')
-  // n2.onclick = () => {
-  //   console.log('2 was clicked!!!')
-  // }
-  // n2.show()
-
   ipcMain.handle(
     'show-notification',
     (_, title: string, body: string, userInfo: Record<string, any>) => {

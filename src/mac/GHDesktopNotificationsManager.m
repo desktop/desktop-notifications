@@ -39,4 +39,14 @@ didReceiveNotificationResponse:(UNNotificationResponse *)response
   self.completionHandler(@"click", request.identifier, request.content.userInfo, completionHandler);
 }
 
+- (void)userNotificationCenter:(UNUserNotificationCenter *)center
+       willPresentNotification:(UNNotification *)notification
+         withCompletionHandler:(void (^)(UNNotificationPresentationOptions options))completionHandler
+{
+  // This will make sure the notification is displayed even when the app is focused
+  completionHandler(UNNotificationPresentationOptionAlert
+                    | UNNotificationPresentationOptionBadge
+                    | UNNotificationPresentationOptionSound);
+}
+
 @end
