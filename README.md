@@ -9,7 +9,7 @@
 - leverage TypeScript declarations wherever possible
 
 **Note:** This is currently in preview, with support for features that GitHub
-Desktop.
+Desktop uses.
 
 ## Install
 
