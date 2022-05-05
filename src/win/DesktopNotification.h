@@ -24,6 +24,7 @@ public:
                         DesktopNotificationsManager *desktopNotificationsManager);
 
     static std::string getNotificationIDFromToast(ABI::Windows::UI::Notifications::IToastNotification *toast);
+    static std::wstring getUserInfoFromToast(ABI::Windows::UI::Notifications::IToastNotification *toast);
 
 private:
     std::wstring m_appID;
@@ -46,4 +47,6 @@ private:
     HRESULT addAttribute(const std::wstring &name, ABI::Windows::Data::Xml::Dom::IXmlNamedNodeMap *attributeMap,
                          const std::wstring &value);
     void printXML();
+
+    static std::wstring getLaunchArgsFromToast(ABI::Windows::UI::Notifications::IToastNotification *toast);
 };

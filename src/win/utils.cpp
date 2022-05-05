@@ -80,16 +80,16 @@ namespace Utils
         return out.str();
     }
 
-    std::wstring parseNotificationID(const std::wstring &launchArgs)
+    std::string parseNotificationID(const std::wstring &launchArgs)
     {
         std::wstringstream out;
         size_t end = launchArgs.find(L";");
         if (end == std::wstring::npos)
         {
-            return L"";
+            return "";
         }
 
-        return launchArgs.substr(0, end);
+        return wideCharToUTF8(launchArgs.substr(0, end));
     }
 
     std::wstring parseUserInfo(const std::wstring &launchArgs)

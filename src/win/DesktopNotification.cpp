@@ -47,10 +47,11 @@ HRESULT DesktopNotification::startListeningEvents(DesktopNotificationsManager *d
 {
     ComPtr<IToastNotification> toast = m_notification;
 
-    // Register the event handlers
-    DN_RETURN_ON_ERROR(toast->add_Activated(desktopNotificationsManager, &m_activatedToken));
-    DN_RETURN_ON_ERROR(toast->add_Dismissed(desktopNotificationsManager, &m_dismissedToken));
-    DN_RETURN_ON_ERROR(toast->add_Failed(desktopNotificationsManager, &m_failedToken));
+    // TODO: Register the event handlers if we need more control over them. For
+    // now, just using the events from the activator is enough.
+    // DN_RETURN_ON_ERROR(toast->add_Activated(desktopNotificationsManager, &m_activatedToken));
+    // DN_RETURN_ON_ERROR(toast->add_Dismissed(desktopNotificationsManager, &m_dismissedToken));
+    // DN_RETURN_ON_ERROR(toast->add_Failed(desktopNotificationsManager, &m_failedToken));
 
     return S_OK;
 }
@@ -187,14 +188,14 @@ HRESULT DesktopNotification::createToast(ComPtr<IToastNotificationManagerStatics
     return m_notifier->Show(m_notification.Get());
 }
 
-std::string DesktopNotification::getNotificationIDFromToast(IToastNotification *toast)
+std::wstring DesktopNotification::getLaunchArgsFromToast(IToastNotification *toast)
 {
     IXmlDocument *xmlDoc = nullptr;
     toast->get_Content(&xmlDoc);
     if (xmlDoc == nullptr)
     {
         DN_LOG_ERROR(L"Could not get xml document from toast");
-        return "";
+        return L"";
     }
 
     // Get "launch" attribute and split it to obtain the notification ID
@@ -206,10 +207,32 @@ std::string DesktopNotification::getNotificationIDFromToast(IToastNotification *
     if (launchArgs == nullptr)
     {
         DN_LOG_ERROR(L"Could not get launch attribute from toast");
+        return L"";
+    }
+
+    return WindowsGetStringRawBuffer(launchArgs, nullptr);
+}
+
+std::string DesktopNotification::getNotificationIDFromToast(IToastNotification *toast)
+{
+    std::wstring launchArgs = getLaunchArgsFromToast(toast);
+    if (launchArgs == L"")
+    {
+        DN_LOG_ERROR(L"Could not get launch arguments from toast");
         return "";
     }
 
-    std::wstring launchData = WindowsGetStringRawBuffer(launchArgs, nullptr);
-    const auto notificationID = Utils::parseNotificationID(launchData);
-    return Utils::wideCharToUTF8(notificationID);
+    return Utils::parseNotificationID(launchArgs);
+}
+
+std::wstring DesktopNotification::getUserInfoFromToast(IToastNotification *toast)
+{
+    std::wstring launchArgs = getLaunchArgsFromToast(toast);
+    if (launchArgs == L"")
+    {
+        DN_LOG_ERROR(L"Could not get launch arguments from toast");
+        return L"";
+    }
+
+    return Utils::parseUserInfo(launchArgs);
 }

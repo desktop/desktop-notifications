@@ -222,7 +222,7 @@ void DesktopNotificationsManager::handleActivatorEvent(const std::wstring &launc
 {
     const auto notificationID = Utils::parseNotificationID(launchArgs);
     const auto userInfo = Utils::parseUserInfo(launchArgs);
-    invokeJSCallback("click", Utils::wideCharToUTF8(notificationID), userInfo);
+    invokeJSCallback("click", notificationID, userInfo);
 }
 
 bool DesktopNotificationsManager::closeNotification(std::shared_ptr<DesktopNotification> d)
@@ -254,7 +254,8 @@ IFACEMETHODIMP DesktopNotificationsManager::Invoke(_In_ IToastNotification *send
     }
 
     const auto notificationID = DesktopNotification::getNotificationIDFromToast(sender);
-    invokeJSCallback("click", notificationID, L"");
+    const auto userInfo = DesktopNotification::getUserInfoFromToast(sender);
+    invokeJSCallback("click", notificationID, userInfo);
 
     return S_OK;
 }
@@ -269,6 +270,7 @@ IFACEMETHODIMP DesktopNotificationsManager::Invoke(_In_ IToastNotification *send
         DN_LOG_ERROR(L"Could not get notification ID from toast");
         return S_OK;
     }
+    const auto userInfo = DesktopNotification::getUserInfoFromToast(sender);
 
     ToastDismissalReason tdr;
     HRESULT hr = e->get_Reason(&tdr);
@@ -277,13 +279,13 @@ IFACEMETHODIMP DesktopNotificationsManager::Invoke(_In_ IToastNotification *send
         switch (tdr)
         {
         case ToastDismissalReason_ApplicationHidden:
-            invokeJSCallback("hidden", notificationID, L"");
+            invokeJSCallback("hidden", notificationID, userInfo);
             break;
         case ToastDismissalReason_UserCanceled:
-            invokeJSCallback("dismissed", notificationID, L"");
+            invokeJSCallback("dismissed", notificationID, userInfo);
             break;
         case ToastDismissalReason_TimedOut:
-            invokeJSCallback("timedout", notificationID, L"");
+            invokeJSCallback("timedout", notificationID, userInfo);
             break;
         }
     }
@@ -301,9 +303,10 @@ IFACEMETHODIMP DesktopNotificationsManager::Invoke(_In_ IToastNotification *send
         DN_LOG_ERROR(L"Could not get notification ID from toast");
         return S_OK;
     }
+    const auto userInfo = DesktopNotification::getUserInfoFromToast(sender);
 
     DN_LOG_ERROR(L"The toast encountered an error.");
-    invokeJSCallback("error", notificationID, L"");
+    invokeJSCallback("error", notificationID, userInfo);
     return S_OK;
 }
 

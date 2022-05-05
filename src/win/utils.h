@@ -22,7 +22,7 @@ namespace Utils
     std::unordered_map<std::wstring, std::wstring> splitData(const std::wstring &data);
 
     std::wstring formatLaunchArgs(const std::wstring &notificationID, const std::wstring &userInfo);
-    std::wstring parseNotificationID(const std::wstring &launchArgs);
+    std::string parseNotificationID(const std::wstring &launchArgs);
     std::wstring parseUserInfo(const std::wstring &launchArgs);
 
     inline bool checkResult(const char *file, const long line, const char *func, const HRESULT &hr)
@@ -36,8 +36,6 @@ namespace Utils
     }
 
     std::wstring formatWinError(unsigned long errorCode);
-
-    // std::unordered_map<std::wstring_view, std::wstring_view> splitData(const std::wstring_view &data);
 
     Napi::String JSONStringify(const Napi::Env &env, const Napi::Object &object);
     Napi::Value JSONParse(const Napi::Env &env, const Napi::String &string);
