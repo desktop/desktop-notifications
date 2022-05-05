@@ -193,9 +193,10 @@ ComPtr<IToastNotificationHistory> DesktopNotificationsManager::getHistory()
 
 HRESULT DesktopNotificationsManager::displayToast(const std::wstring &id,
                                                   const std::wstring &title,
-                                                  const std::wstring &body)
+                                                  const std::wstring &body,
+                                                  const std::wstring &userInfo)
 {
-    std::shared_ptr<DesktopNotification> d = std::make_shared<DesktopNotification>(id, m_appID, title, body);
+    std::shared_ptr<DesktopNotification> d = std::make_shared<DesktopNotification>(id, m_appID, title, body, userInfo);
     m_desktopNotifications.push_back(d);
     return d->createToast(m_toastManager, this);
 }
@@ -234,7 +235,7 @@ bool DesktopNotificationsManager::closeNotification(std::shared_ptr<DesktopNotif
 }
 
 // DesktopToastActivatedEventHandler
-IFACEMETHODIMP DesktopNotificationsManager::Invoke(_In_ IToastNotification * /*sender*/,
+IFACEMETHODIMP DesktopNotificationsManager::Invoke(_In_ IToastNotification *sender,
                                                    _In_ IInspectable *args)
 {
     IToastActivatedEventArgs *buttonReply = nullptr;
@@ -245,12 +246,7 @@ IFACEMETHODIMP DesktopNotificationsManager::Invoke(_In_ IToastNotification * /*s
         return S_OK;
     }
 
-    HSTRING dataArgs;
-    buttonReply->get_Arguments(&dataArgs);
-    std::wstring data = WindowsGetStringRawBuffer(dataArgs, nullptr);
-    const auto dataMap = Utils::splitData(data);
-    const auto notificationID = Utils::wideCharToUTF8(dataMap.at(L"notificationId"));
-
+    const auto notificationID = DesktopNotification::getNotificationIDFromToast(sender);
     invokeJSCallback("click", notificationID);
 
     return S_OK;

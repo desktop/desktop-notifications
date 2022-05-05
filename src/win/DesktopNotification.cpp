@@ -10,8 +10,6 @@
 #include <wrl\wrappers\corewrappers.h>
 
 const std::wstring kLaunchAttribute = L"launch";
-const std::wstring kActionAttribute = L"action";
-const std::wstring kNotificationIDAttribute = L"notificationId";
 
 using namespace ABI::Windows::UI::Notifications;
 using namespace Windows::Foundation;
@@ -20,9 +18,11 @@ using namespace Wrappers;
 DesktopNotification::DesktopNotification(const std::wstring &id,
                                          const std::wstring &appID,
                                          const std::wstring &title,
-                                         const std::wstring &body)
+                                         const std::wstring &body,
+                                         const std::wstring &userInfo)
     : m_title(title),
       m_body(body),
+      m_userInfo(userInfo),
       m_appID(appID),
       m_id(id)
 {
@@ -112,17 +112,6 @@ void DesktopNotification::printXML()
     DN_LOG_DEBUG(L"------------------------\n\t\t\t" << str << L"\n\t\t" << L"------------------------");
 }
 
-std::wstring DesktopNotification::formatAction(
-    const std::wstring &action,
-    const std::vector<std::pair<std::wstring, std::wstring>> &extraData = {}) const
-{
-    std::vector<std::pair<std::wstring, std::wstring>> data = {
-        {kActionAttribute, action},
-        {kNotificationIDAttribute, m_id}};
-    data.insert(data.end(), extraData.cbegin(), extraData.cend());
-    return Utils::formatData(data);
-}
-
 // Create and display the toast
 HRESULT DesktopNotification::createToast(ComPtr<IToastNotificationManagerStatics> toastManager,
                                          DesktopNotificationsManager *desktopNotificationsManager)
@@ -138,7 +127,10 @@ HRESULT DesktopNotification::createToast(ComPtr<IToastNotificationManagerStatics
     ComPtr<IXmlNamedNodeMap> rootAttributes;
     DN_RETURN_ON_ERROR(root->get_Attributes(&rootAttributes));
 
-    const auto data = formatAction(L"clicked");
+    std::vector<std::pair<std::wstring, std::wstring>> extraData = {
+        //{kNotificationIDAttribute, m_id}
+    };
+    const auto data = Utils::formatLaunchArgs(m_id, m_userInfo);
     DN_RETURN_ON_ERROR(addAttribute(kLaunchAttribute, rootAttributes.Get(), data));
     DN_RETURN_ON_ERROR(setTextValues());
 
@@ -218,14 +210,6 @@ std::string DesktopNotification::getNotificationIDFromToast(IToastNotification *
     }
 
     std::wstring launchData = WindowsGetStringRawBuffer(launchArgs, nullptr);
-    const auto launchDataMap = Utils::splitData(launchData);
-
-    if (launchDataMap.find(kNotificationIDAttribute) == launchDataMap.end())
-    {
-        DN_LOG_ERROR(L"Could not get notificationID attribute from toast");
-        return "";
-    }
-
-    const auto notificationID = launchDataMap.at(kNotificationIDAttribute);
+    const auto notificationID = Utils::parseNotificationID(launchData);
     return Utils::wideCharToUTF8(notificationID);
 }

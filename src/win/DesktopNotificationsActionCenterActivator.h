@@ -41,6 +41,20 @@ public:
                                                ULONG count) override
     {
         // Do nothing
+        printf("Hello from the COM server! Count: %d\n", count);
+        std::wstringstream msg;
+        for (ULONG i = 0; i < count; ++i)
+        {
+            std::wstring tmp = data[i].Value;
+            DN_LOG_ERROR(tmp);
+            // printing \r to stdcout is kind of problematic :D
+            std::replace(tmp.begin(), tmp.end(), L'\r', L'\n');
+            msg << tmp;
+        }
+
+        DN_LOG_ERROR(msg.str());
+        DN_LOG_ERROR(invokedArgs);
+
         return S_OK;
     }
 };

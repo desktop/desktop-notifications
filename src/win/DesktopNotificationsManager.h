@@ -53,7 +53,9 @@ public:
     const std::string getCurrentPermission();
 
     HRESULT displayToast(const std::wstring &id,
-                         const std::wstring &title, const std::wstring &body);
+                         const std::wstring &title,
+                         const std::wstring &body,
+                         const std::wstring &userInfo);
     bool closeToast(const std::wstring &id);
 
     // DesktopToastActivatedEventHandler
