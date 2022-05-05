@@ -1,7 +1,3 @@
-// Windows.h strict mode
-#define STRICT
-#define UNICODE
-
 #include <napi.h>
 #include "uv.h"
 
