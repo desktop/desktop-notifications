@@ -20,11 +20,7 @@ function getNativeModule(): any | null {
   return _nativeModule
 }
 
-/**
- * Initializes the desktop-notifications system.
- *
- * @param toastActivatorClsid CLSID used by Windows to report notification events
- */
+/** Initializes the desktop-notifications system. */
 export const initializeNotifications: (
   opts: INotificationOptions
 ) => void = opts =>
@@ -34,13 +30,24 @@ export const initializeNotifications: (
 export const terminateNotifications: () => void = () =>
   getNativeModule()?.terminateNotifications()
 
+/** Gets the current state of the notifications permission. */
 export const getNotificationsPermission: () => Promise<
   DesktopNotificationPermission
 > = () => getNativeModule()?.getNotificationsPermission()
 
+/** Requests the user to grant permission to display notifications. */
 export const requestNotificationsPermission: () => Promise<boolean> = () =>
   getNativeModule()?.requestNotificationsPermission()
 
+/**
+ * Displays a system notification.
+ * @param title Title of the notification
+ * @param body Body of the notification
+ * @param userInfo (Optional) An object with any information that needs to be
+ * passed to the notification callback when the user clicks on the notification.
+ * @returns The ID of the notification displayed. This ID can be used to close
+ * the notification.
+ */
 export const showNotification: (
   title: string,
   body: string,
@@ -55,5 +62,6 @@ export const showNotification: (
   return id
 }
 
+/** Closes the notification with the given ID. */
 export const closeNotification: (id: string) => void = (...args) =>
   getNativeModule()?.closeNotification(...args)

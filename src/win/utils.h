@@ -21,6 +21,7 @@ namespace Utils
 
     std::unordered_map<std::wstring, std::wstring> splitData(const std::wstring &data);
 
+    // Formats the launch args like this: <notificationID>;<userInfo JSON string>
     std::wstring formatLaunchArgs(const std::wstring &notificationID, const std::wstring &userInfo);
     std::string parseNotificationID(const std::wstring &launchArgs);
     std::wstring parseUserInfo(const std::wstring &launchArgs);
