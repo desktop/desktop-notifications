@@ -104,9 +104,14 @@ namespace
     auto id = Utils::utf8ToWideChar(info[0].As<Napi::String>());
     auto title = Utils::utf8ToWideChar(info[1].As<Napi::String>());
     auto body = Utils::utf8ToWideChar(info[2].As<Napi::String>());
-    auto userInfoObject = info[3].As<Napi::Object>();
-    auto userInfoString = Utils::JSONStringify(env, userInfoObject);
-    auto userInfo = Utils::utf8ToWideChar(userInfoString);
+    auto userInfo = L"";
+
+    if (info[3].IsObject())
+    {
+      auto userInfoObject = info[3].As<Napi::Object>();
+      auto userInfoString = Utils::JSONStringify(env, userInfoObject);
+      userInfo = Utils::utf8ToWideChar(userInfoString);
+    }
 
     desktopNotificationsManager->displayToast(id, title, body, userInfo);
 

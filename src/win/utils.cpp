@@ -119,7 +119,18 @@ namespace Utils
     {
         Napi::Object json = env.Global().Get("JSON").As<Napi::Object>();
         Napi::Function stringify = json.Get("stringify").As<Napi::Function>();
-        return stringify.Call(json, {object}).As<Napi::String>();
+        Napi::String result = Napi::String::New(env, "");
+
+        try
+        {
+            result = stringify.Call(json, {object}).As<Napi::String>();
+        }
+        catch (...)
+        {
+            DN_LOG_ERROR("Failed to stringify JSON object");
+        }
+
+        return result;
     }
 
     Napi::Value JSONParse(const Napi::Env &env, const Napi::String &string)
