@@ -210,7 +210,22 @@ std::string DesktopNotification::getNotificationIDFromToast(IToastNotification *
     IXmlElement *rootElement = nullptr;
     xmlDoc->get_DocumentElement(&rootElement);
     rootElement->GetAttribute(HStringReference(kLaunchAttribute.c_str()).Get(), &launchArgs);
+
+    if (launchArgs == nullptr)
+    {
+        DN_LOG_ERROR(L"Could not get launch attribute from toast");
+        return "";
+    }
+
     std::wstring launchData = WindowsGetStringRawBuffer(launchArgs, nullptr);
     const auto launchDataMap = Utils::splitData(launchData);
-    return Utils::wideCharToUTF8(launchDataMap.at(kNotificationIDAttribute));
+
+    if (launchDataMap.find(kNotificationIDAttribute) == launchDataMap.end())
+    {
+        DN_LOG_ERROR(L"Could not get notificationID attribute from toast");
+        return "";
+    }
+
+    const auto notificationID = launchDataMap.at(kNotificationIDAttribute);
+    return Utils::wideCharToUTF8(notificationID);
 }
