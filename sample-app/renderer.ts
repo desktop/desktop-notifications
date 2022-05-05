@@ -19,6 +19,7 @@ setupClickEventListener(
   'requestPermissionsButton',
   requestNotificationsPermission
 )
+updateNotificationsSettingsLink()
 
 function setupClickEventListener(id: string, onclick: () => void) {
   const element = document.getElementById(id)
@@ -26,6 +27,15 @@ function setupClickEventListener(id: string, onclick: () => void) {
     throw new Error(`Could not find notification with id ${id}`)
   }
   element.addEventListener('click', onclick)
+}
+
+async function updateNotificationsSettingsLink() {
+  const notificationsSettingsLink = document.getElementById(
+    'notificationsSettingsLink'
+  ) as HTMLLinkElement
+  notificationsSettingsLink.href = await ipcRenderer.invoke(
+    'get-notification-settings-url'
+  )
 }
 
 async function showNotification() {

@@ -7,6 +7,7 @@ import {
   showNotification,
   onNotificationEvent,
   requestNotificationsPermission,
+  getNotificationSettingsUrl,
 } from 'desktop-notifications'
 
 const createWindow = () => {
@@ -30,6 +31,8 @@ const createWindow = () => {
   win.webContents.openDevTools()
   return win
 }
+
+app.setAppUserModelId('com.squirrel.GitHubDesktop.GitHubDesktop')
 
 app.whenReady().then(() => {
   const window = createWindow()
@@ -56,4 +59,6 @@ app.whenReady().then(() => {
     'request-notifications-permission',
     requestNotificationsPermission
   )
+
+  ipcMain.handle('get-notification-settings-url', getNotificationSettingsUrl)
 })
