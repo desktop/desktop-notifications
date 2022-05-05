@@ -218,6 +218,13 @@ bool DesktopNotificationsManager::closeToast(const std::wstring &id)
     return false;
 }
 
+void DesktopNotificationsManager::handleActivatorEvent(const std::wstring &launchArgs)
+{
+    const auto notificationID = Utils::parseNotificationID(launchArgs);
+    const auto userInfo = Utils::parseUserInfo(launchArgs);
+    invokeJSCallback("click", Utils::wideCharToUTF8(notificationID), userInfo);
+}
+
 bool DesktopNotificationsManager::closeNotification(std::shared_ptr<DesktopNotification> d)
 {
     if (auto history = getHistory())
@@ -247,7 +254,7 @@ IFACEMETHODIMP DesktopNotificationsManager::Invoke(_In_ IToastNotification *send
     }
 
     const auto notificationID = DesktopNotification::getNotificationIDFromToast(sender);
-    invokeJSCallback("click", notificationID);
+    invokeJSCallback("click", notificationID, L"");
 
     return S_OK;
 }
@@ -270,13 +277,13 @@ IFACEMETHODIMP DesktopNotificationsManager::Invoke(_In_ IToastNotification *send
         switch (tdr)
         {
         case ToastDismissalReason_ApplicationHidden:
-            invokeJSCallback("hidden", notificationID);
+            invokeJSCallback("hidden", notificationID, L"");
             break;
         case ToastDismissalReason_UserCanceled:
-            invokeJSCallback("dismissed", notificationID);
+            invokeJSCallback("dismissed", notificationID, L"");
             break;
         case ToastDismissalReason_TimedOut:
-            invokeJSCallback("timedout", notificationID);
+            invokeJSCallback("timedout", notificationID, L"");
             break;
         }
     }
@@ -296,18 +303,30 @@ IFACEMETHODIMP DesktopNotificationsManager::Invoke(_In_ IToastNotification *send
     }
 
     DN_LOG_ERROR(L"The toast encountered an error.");
-    invokeJSCallback("error", notificationID);
+    invokeJSCallback("error", notificationID, L"");
     return S_OK;
 }
 
-void DesktopNotificationsManager::invokeJSCallback(std::string eventName,
-                                                   std::string notificationID)
+void DesktopNotificationsManager::invokeJSCallback(const std::string &eventName,
+                                                   const std::string &notificationID,
+                                                   const std::wstring &userInfo)
 {
-    auto cb = [eventName, notificationID](Napi::Env env, Napi::Function jsCallback)
+    auto cb = [=](Napi::Env env, Napi::Function jsCallback)
     {
-        jsCallback.Call({Napi::String::New(env, eventName),
-                         Napi::String::New(env, notificationID)});
+        Napi::Value userInfoObject = env.Undefined();
+        if (userInfo != L"")
+        {
+            Napi::String userInfoString = Napi::String::New(env, (const char16_t *)userInfo.c_str());
+            userInfoObject = Utils::JSONParse(env, userInfoString);
+        }
+        jsCallback.Call({
+            Napi::String::New(env, eventName),
+            Napi::String::New(env, notificationID),
+            userInfoObject,
+        });
     };
 
     m_callback.BlockingCall(cb);
 }
+
+std::shared_ptr<DesktopNotificationsManager> desktopNotificationsManager = nullptr;

@@ -18,8 +18,6 @@ using namespace Napi;
 
 namespace
 {
-  std::shared_ptr<DesktopNotificationsManager> desktopNotificationsManager;
-
   Napi::Value initializeNotifications(const Napi::CallbackInfo &info)
   {
     Napi::Env &env = info.Env();

@@ -122,10 +122,21 @@ namespace Utils
         return stringify.Call(json, {object}).As<Napi::String>();
     }
 
-    Napi::Object JSONParse(const Napi::Env &env, const Napi::String &string)
+    Napi::Value JSONParse(const Napi::Env &env, const Napi::String &string)
     {
         Napi::Object json = env.Global().Get("JSON").As<Napi::Object>();
         Napi::Function parse = json.Get("parse").As<Napi::Function>();
-        return parse.Call(json, {string}).As<Napi::Object>();
+        Napi::Value result = env.Undefined();
+
+        try
+        {
+            result = parse.Call(json, {string}).As<Napi::Object>();
+        }
+        catch (...)
+        {
+            DN_LOG_ERROR("Failed to parse JSON");
+        }
+
+        return result;
     }
 }

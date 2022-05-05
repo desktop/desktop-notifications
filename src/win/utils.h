@@ -40,7 +40,7 @@ namespace Utils
     // std::unordered_map<std::wstring_view, std::wstring_view> splitData(const std::wstring_view &data);
 
     Napi::String JSONStringify(const Napi::Env &env, const Napi::Object &object);
-    Napi::Object JSONParse(const Napi::Env &env, const Napi::String &string);
+    Napi::Value JSONParse(const Napi::Env &env, const Napi::String &string);
 };
 
 #define DN_GROUP_NAME L"desktop-notifications"

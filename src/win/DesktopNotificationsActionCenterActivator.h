@@ -5,6 +5,7 @@
 #include <sstream>
 #include <wrl.h>
 
+#include "DesktopNotificationsManager.h"
 #include "Utils.h"
 
 #define DN_WSTRINGIFY(X) L##X
@@ -40,20 +41,13 @@ public:
                                                    const NOTIFICATION_USER_INPUT_DATA *data,
                                                ULONG count) override
     {
-        // Do nothing
-        printf("Hello from the COM server! Count: %d\n", count);
-        std::wstringstream msg;
-        for (ULONG i = 0; i < count; ++i)
+        if (!desktopNotificationsManager)
         {
-            std::wstring tmp = data[i].Value;
-            DN_LOG_ERROR(tmp);
-            // printing \r to stdcout is kind of problematic :D
-            std::replace(tmp.begin(), tmp.end(), L'\r', L'\n');
-            msg << tmp;
+            DN_LOG_ERROR("Cannot handle notification activator: notifications not initialized.");
+            return S_OK;
         }
 
-        DN_LOG_ERROR(msg.str());
-        DN_LOG_ERROR(invokedArgs);
+        desktopNotificationsManager->handleActivatorEvent(invokedArgs);
 
         return S_OK;
     }
