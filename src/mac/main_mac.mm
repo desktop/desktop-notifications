@@ -60,7 +60,7 @@ namespace
         jsCallback.Call({
           Napi::String::New(env, event.UTF8String),
           Napi::String::New(env, identifier.UTF8String),
-          getNapiValueFromObject(env, userInfo),
+          getNapiValueFromNSObject(env, userInfo),
         });
 
         // Invoke the OS completion handler
@@ -118,7 +118,7 @@ namespace
     if (info.Length() > 3 && info[3].IsObject())
     {
       auto userInfo = info[3].As<Napi::Object>();
-      content.userInfo = getObjectFromNapiValue(env, userInfo);
+      content.userInfo = getNSObjectFromNapiValue(env, userInfo);
     }
 
     // Create the request object.

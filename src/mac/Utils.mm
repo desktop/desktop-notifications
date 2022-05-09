@@ -5,7 +5,7 @@ Napi::Object getNapiObjectFromDictionary(const Napi::Env &env, NSDictionary *d)
   Napi::Object obj = Napi::Object::New(env);
   for (NSString *key in d) {
     id value = d[key];
-    obj.Set(Napi::String::New(env, key.UTF8String), getNapiValueFromObject(env, value));
+    obj.Set(Napi::String::New(env, key.UTF8String), getNapiValueFromNSObject(env, value));
   }
   return obj;
 }
@@ -15,12 +15,12 @@ Napi::Array getNapiArrayFromArray(const Napi::Env &env, NSArray *a)
   Napi::Array result = Napi::Array::New(env);
   for (NSUInteger i = 0; i < a.count; i++) {
     id value = a[i];
-    result.Set(i, getNapiValueFromObject(env, value));
+    result.Set(i, getNapiValueFromNSObject(env, value));
   }
   return result;
 }
 
-Napi::Value getNapiValueFromObject(const Napi::Env &env, id value)
+Napi::Value getNapiValueFromNSObject(const Napi::Env &env, id value)
 {
   if (value == nil)
   {
@@ -86,7 +86,7 @@ Napi::Value getNapiValueFromObject(const Napi::Env &env, id value)
   return env.Undefined();
 }
 
-id getObjectFromNapiValue(const Napi::Env &env, const Napi::Value &value)
+id getNSObjectFromNapiValue(const Napi::Env &env, const Napi::Value &value)
 {
   if (value.IsString())
   {
@@ -111,7 +111,7 @@ id getObjectFromNapiValue(const Napi::Env &env, const Napi::Value &value)
     for (auto it = obj.begin(); it != obj.end(); ++it) {
       auto entry = *it;
       NSString *key = [NSString stringWithUTF8String:entry.first.As<Napi::String>().Utf8Value().c_str()];
-      d[key] = getObjectFromNapiValue(env, entry.second);
+      d[key] = getNSObjectFromNapiValue(env, entry.second);
     }
     return d;
   }
@@ -120,7 +120,7 @@ id getObjectFromNapiValue(const Napi::Env &env, const Napi::Value &value)
     Napi::Array arr = value.As<Napi::Array>();
     NSMutableArray *a = [NSMutableArray array];
     for (uint32_t i = 0; i < arr.Length(); i++) {
-      a[i] = getObjectFromNapiValue(env, arr[i]);
+      a[i] = getNSObjectFromNapiValue(env, arr[i]);
     }
     return a;
   }
