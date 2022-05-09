@@ -8,8 +8,6 @@
 
 using namespace Microsoft::WRL;
 
-const std::wstring kNotificationIDAttribute = L"notificationId";
-
 namespace Utils
 {
     LPWSTR Utils::utf8ToWideChar(std::string utf8)
