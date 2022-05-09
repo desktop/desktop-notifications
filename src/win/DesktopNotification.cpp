@@ -128,9 +128,6 @@ HRESULT DesktopNotification::createToast(ComPtr<IToastNotificationManagerStatics
     ComPtr<IXmlNamedNodeMap> rootAttributes;
     DN_RETURN_ON_ERROR(root->get_Attributes(&rootAttributes));
 
-    std::vector<std::pair<std::wstring, std::wstring>> extraData = {
-        //{kNotificationIDAttribute, m_id}
-    };
     const auto data = Utils::formatLaunchArgs(m_id, m_userInfo);
     DN_RETURN_ON_ERROR(addAttribute(kLaunchAttribute, rootAttributes.Get(), data));
     DN_RETURN_ON_ERROR(setTextValues());
