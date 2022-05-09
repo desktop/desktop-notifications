@@ -97,7 +97,7 @@ namespace
 
     if (!info[2].IsString())
     {
-      Napi::TypeError::New(env, "A string was expected for the second argument, but wasn't received.").ThrowAsJavaScriptException();
+      Napi::TypeError::New(env, "A string was expected for the third argument, but wasn't received.").ThrowAsJavaScriptException();
       return env.Undefined();
     }
 
