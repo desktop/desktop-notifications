@@ -16,9 +16,9 @@ jobs:
       fail-fast: false
       matrix:
         node: [16.13.0]
-        os: [windows-latest, macos-latest]
+        os: [windows-2019, macos-latest]
         include:
-          - os: windows-latest
+          - os: windows-2019
             friendlyName: Windows
           - os: macos-latest
             friendlyName: macOS
@@ -36,7 +36,7 @@ jobs:
           $NodeVersion = (node --version) -replace '^.'
           $NodeFallbackVersion = "16.13.0"
           & .\script\download-node-lib-win-arm64.ps1 $NodeVersion $NodeFallbackVersion
-        if: ${{ matrix.os == 'windows-latest' }}
+        if: ${{ matrix.os == 'windows-2019' }}
         name: Install Windows arm64 node.lib
 
       - name: Install and build dependencies
