@@ -46,6 +46,25 @@ After exploring all these options, we decided to write our own library to do the
 stuff we require using no dependencies at all and having all the features we
 need.
 
+## Building and running the sample app
+
+In order to get the sample app up and running you need to:
+
+1. Build `desktop-notifications`.
+2. Build the sample app.
+3. Start the sample app.
+
+These are the commands to make that happen:
+
+```
+$ yarn install
+$ yarn build
+$ cd sample-app
+$ yarn install
+$ yarn build
+$ yarn start
+```
+
 ## Documentation
 
 See the documentation under the
