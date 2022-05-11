@@ -1,6 +1,6 @@
 {
   "name": "desktop-notifications",
-  "version": "0.2.0",
+  "version": "0.1.7",
   "description": "A simple and opinionated library for handling Windows notifications",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
