@@ -11,8 +11,6 @@
     "test": "jest -c jest.json",
     "prepublishOnly": "yarn build",
     "postpublish": "git push --follow-tags",
-    "build-and-run-main": "yarn build && ts-node sample/main.ts",
-    "just-run-main": "ts-node sample/main.ts",
     "prettify": "yarn prettier --write \"./**/*.{ts,tsx,js,json,jsx,scss,html,yaml,yml}\"",
     "check-prettier": "prettier --check \"./**/*.{ts,tsx,js,json,jsx,scss,html,yaml,yml}\"",
     "prebuild-napi-x64": "prebuild -t 4 -r napi -a x64 --strip",
