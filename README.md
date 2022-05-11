@@ -52,7 +52,9 @@ In order to get the sample app up and running you need to:
 
 1. Build `desktop-notifications`.
 2. Build the sample app.
-3. Start the sample app.
+3. (macOS only) Sign the Electron binary, so that macOS will allow the sample
+   app to display notifications.
+4. Start the sample app.
 
 These are the commands to make that happen:
 
@@ -62,6 +64,7 @@ $ yarn build
 $ cd sample-app
 $ yarn install
 $ yarn build
+$ /usr/bin/codesign --force --sign - --timestamp\=none node_modules/electron/dist/Electron.app/Contents/MacOS/Electron # macOS only
 $ yarn start
 ```
 
