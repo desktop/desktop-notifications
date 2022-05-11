@@ -4,6 +4,7 @@
 #include <sstream>
 #include <unordered_map>
 #include <iostream>
+#include <napi.h>
 
 #define DN_LOG(stream, level, msg) stream << L"[desktop-notifications] [" << level << L"] " << msg << std::endl
 
@@ -20,7 +21,10 @@ namespace Utils
 
     std::unordered_map<std::wstring, std::wstring> splitData(const std::wstring &data);
 
-    std::wstring formatData(const std::vector<std::pair<std::wstring, std::wstring>> &data);
+    // Formats the launch args like this: <notificationID>;<userInfo JSON string>
+    std::wstring formatLaunchArgs(const std::wstring &notificationID, const std::wstring &userInfo);
+    std::string parseNotificationID(const std::wstring &launchArgs);
+    std::wstring parseUserInfo(const std::wstring &launchArgs);
 
     inline bool checkResult(const char *file, const long line, const char *func, const HRESULT &hr)
     {
@@ -33,6 +37,9 @@ namespace Utils
     }
 
     std::wstring formatWinError(unsigned long errorCode);
+
+    Napi::String JSONStringify(const Napi::Env &env, const Napi::Object &object);
+    Napi::Value JSONParse(const Napi::Env &env, const Napi::String &string);
 };
 
 #define DN_GROUP_NAME L"desktop-notifications"

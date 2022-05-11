@@ -11,7 +11,8 @@ public:
     explicit DesktopNotification::DesktopNotification(const std::wstring &id,
                                                       const std::wstring &appID,
                                                       const std::wstring &title,
-                                                      const std::wstring &body);
+                                                      const std::wstring &body,
+                                                      const std::wstring &userInfo);
 
     std::wstring getID()
     {
@@ -23,12 +24,14 @@ public:
                         DesktopNotificationsManager *desktopNotificationsManager);
 
     static std::string getNotificationIDFromToast(ABI::Windows::UI::Notifications::IToastNotification *toast);
+    static std::wstring getUserInfoFromToast(ABI::Windows::UI::Notifications::IToastNotification *toast);
 
 private:
     std::wstring m_appID;
 
     std::wstring m_title;
     std::wstring m_body;
+    std::wstring m_userInfo;
     std::wstring m_id;
     EventRegistrationToken m_activatedToken, m_dismissedToken, m_failedToken;
 
@@ -44,7 +47,6 @@ private:
     HRESULT addAttribute(const std::wstring &name, ABI::Windows::Data::Xml::Dom::IXmlNamedNodeMap *attributeMap,
                          const std::wstring &value);
     void printXML();
-    std::wstring formatAction(
-        const std::wstring &action,
-        const std::vector<std::pair<std::wstring, std::wstring>> &extraData) const;
+
+    static std::wstring getLaunchArgsFromToast(ABI::Windows::UI::Notifications::IToastNotification *toast);
 };

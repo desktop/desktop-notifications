@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "target": "es2020",
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "allowUnreachableCode": false,
+    "allowUnusedLabels": false,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUnusedLocals": true,
+    "sourceMap": true,
+    "jsx": "react",
+    "strict": true,
+    "outDir": "./dist",
+    "useUnknownInCatchVariables": false
+  },
+  "include": ["**/*.ts", "**/*.tsx", "**/*.d.tsx"],
+  "exclude": ["node_modules", "dist", "out"],
+  "compileOnSave": false
+}

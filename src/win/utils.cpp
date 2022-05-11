@@ -8,11 +8,6 @@
 
 using namespace Microsoft::WRL;
 
-namespace
-{
-    bool s_registered = false;
-}
-
 namespace Utils
 {
     LPWSTR Utils::utf8ToWideChar(std::string utf8)
@@ -76,21 +71,35 @@ namespace Utils
         return out;
     }
 
-    std::wstring formatData(const std::vector<std::pair<std::wstring, std::wstring>> &data)
+    std::wstring formatLaunchArgs(const std::wstring &notificationID, const std::wstring &userInfo)
     {
         std::wstringstream out;
-        const auto add = [&](const std::pair<std::wstring, std::wstring> &p)
-        {
-            if (!p.second.empty())
-            {
-                out << p.first << L"=" << p.second << L";";
-            }
-        };
-        for (const auto &p : data)
-        {
-            add(p);
-        }
+        out << notificationID << L";" << userInfo;
         return out.str();
+    }
+
+    std::string parseNotificationID(const std::wstring &launchArgs)
+    {
+        std::wstringstream out;
+        size_t end = launchArgs.find(L";");
+        if (end == std::wstring::npos)
+        {
+            return "";
+        }
+
+        return wideCharToUTF8(launchArgs.substr(0, end));
+    }
+
+    std::wstring parseUserInfo(const std::wstring &launchArgs)
+    {
+        std::wstringstream out;
+        size_t start = launchArgs.find(L";");
+        if (start == std::wstring::npos)
+        {
+            return L"";
+        }
+
+        return launchArgs.substr(start + 1);
     }
 
     std::wstring formatWinError(unsigned long errorCode)
@@ -102,5 +111,41 @@ namespace Utils
         const auto out = std::wstring(error, len);
         LocalFree(error);
         return out;
+    }
+
+    Napi::String JSONStringify(const Napi::Env &env, const Napi::Object &object)
+    {
+        Napi::Object json = env.Global().Get("JSON").As<Napi::Object>();
+        Napi::Function stringify = json.Get("stringify").As<Napi::Function>();
+        Napi::String result = Napi::String::New(env, "");
+
+        try
+        {
+            result = stringify.Call(json, {object}).As<Napi::String>();
+        }
+        catch (...)
+        {
+            DN_LOG_ERROR("Failed to stringify JSON object");
+        }
+
+        return result;
+    }
+
+    Napi::Value JSONParse(const Napi::Env &env, const Napi::String &string)
+    {
+        Napi::Object json = env.Global().Get("JSON").As<Napi::Object>();
+        Napi::Function parse = json.Get("parse").As<Napi::Function>();
+        Napi::Value result = env.Undefined();
+
+        try
+        {
+            result = parse.Call(json, {string}).As<Napi::Object>();
+        }
+        catch (...)
+        {
+            DN_LOG_ERROR("Failed to parse JSON");
+        }
+
+        return result;
     }
 }

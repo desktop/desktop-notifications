@@ -50,9 +50,15 @@ public:
                                 Napi::Function &callback);
     ~DesktopNotificationsManager();
 
+    const std::string getCurrentPermission();
+
     HRESULT displayToast(const std::wstring &id,
-                         const std::wstring &title, const std::wstring &body);
+                         const std::wstring &title,
+                         const std::wstring &body,
+                         const std::wstring &userInfo);
     bool closeToast(const std::wstring &id);
+
+    void handleActivatorEvent(const std::wstring &launchArgs);
 
     // DesktopToastActivatedEventHandler
     IFACEMETHODIMP Invoke(_In_ ABI::Windows::UI::Notifications::IToastNotification *sender,
@@ -127,7 +133,9 @@ private:
     HRESULT RegisterClassObjects(const std::wstring &toastActivatorClsid);
     HRESULT UnregisterClassObjects();
     bool closeNotification(std::shared_ptr<DesktopNotification> d);
-    void invokeJSCallback(std::string eventName, std::string notificationID);
+    void DesktopNotificationsManager::invokeJSCallback(const std::string &eventName,
+                                                       const std::string &notificationID,
+                                                       const std::wstring &userInfo);
 
     // Identifiers of registered class objects. Used for unregistration.
     DWORD m_comCookies[1] = {0};
@@ -136,3 +144,5 @@ private:
     std::wstring m_appID;
     ULONG m_ref;
 };
+
+extern std::shared_ptr<DesktopNotificationsManager> desktopNotificationsManager;

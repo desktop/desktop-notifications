@@ -5,6 +5,7 @@
 #include <sstream>
 #include <wrl.h>
 
+#include "DesktopNotificationsManager.h"
 #include "Utils.h"
 
 #define DN_WSTRINGIFY(X) L##X
@@ -40,7 +41,14 @@ public:
                                                    const NOTIFICATION_USER_INPUT_DATA *data,
                                                ULONG count) override
     {
-        // Do nothing
+        if (!desktopNotificationsManager)
+        {
+            DN_LOG_ERROR("Cannot handle notification activator: notifications not initialized.");
+            return S_OK;
+        }
+
+        desktopNotificationsManager->handleActivatorEvent(invokedArgs);
+
         return S_OK;
     }
 };

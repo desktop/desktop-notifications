@@ -16,6 +16,6 @@
     "typeRoots": ["./node_modules/@types"]
   },
   "exclude": ["node_modules", "build"],
-  "include": ["lib/**/*.ts", "test/**/*.ts", "sample/main.ts"],
+  "include": ["lib/**/*.ts", "test/**/*.ts"],
   "compileOnSave": false
 }

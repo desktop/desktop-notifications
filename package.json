@@ -2,8 +2,8 @@
   "name": "desktop-notifications",
   "version": "0.1.7",
   "description": "A simple and opinionated library for handling Windows notifications",
-  "main": "dist/lib/index.js",
-  "typings": "dist/lib/index.d.ts",
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
   "scripts": {
     "install": "prebuild-install || node-gyp rebuild",
     "build": "node-gyp rebuild && tsc",
@@ -11,9 +11,7 @@
     "test": "jest -c jest.json",
     "prepublishOnly": "yarn build",
     "postpublish": "git push --follow-tags",
-    "build-and-run-main": "yarn build && ts-node sample/main.ts",
-    "just-run-main": "ts-node sample/main.ts",
-    "prettier": "yarn prettier --write",
+    "prettify": "yarn prettier --write \"./**/*.{ts,tsx,js,json,jsx,scss,html,yaml,yml}\"",
     "check-prettier": "prettier --check \"./**/*.{ts,tsx,js,json,jsx,scss,html,yaml,yml}\"",
     "prebuild-napi-x64": "prebuild -t 4 -r napi -a x64 --strip",
     "prebuild-napi-ia32": "prebuild -t 4 -r napi -a ia32 --strip",
@@ -47,7 +45,6 @@
   "dependencies": {
     "node-addon-api": "^4.3.0",
     "prebuild-install": "^7.0.1",
-    "quick-lru": "^3.0.0",
     "uuid": "^8.3.2"
   },
   "binary": {

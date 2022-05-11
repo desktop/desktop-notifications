@@ -159,6 +159,26 @@ HRESULT DesktopNotificationsManager::UnregisterClassObjects()
     return hr;
 }
 
+const std::string DesktopNotificationsManager::getCurrentPermission()
+{
+    Microsoft::WRL::ComPtr<ABI::Windows::UI::Notifications::IToastNotifier> notifier;
+    if (!DN_CHECK_RESULT(m_toastManager->CreateToastNotifierWithId(
+            HStringReference(m_appID.c_str()).Get(), &notifier)))
+    {
+        DN_LOG_ERROR("Failed to create a ToastNotifier to ensure your appId is registered");
+        return "default";
+    }
+
+    NotificationSetting setting = NotificationSetting_Enabled;
+    if (!DN_CHECK_RESULT(notifier->get_Setting(&setting)))
+    {
+        DN_LOG_ERROR("Failed to retreive NotificationSettings to ensure your appId is registered");
+        return "default";
+    }
+
+    return (setting == NotificationSetting_Enabled ? "granted" : "denied");
+}
+
 ComPtr<IToastNotificationHistory> DesktopNotificationsManager::getHistory()
 {
     ComPtr<IToastNotificationManagerStatics2> toastStatics2;
@@ -173,9 +193,10 @@ ComPtr<IToastNotificationHistory> DesktopNotificationsManager::getHistory()
 
 HRESULT DesktopNotificationsManager::displayToast(const std::wstring &id,
                                                   const std::wstring &title,
-                                                  const std::wstring &body)
+                                                  const std::wstring &body,
+                                                  const std::wstring &userInfo)
 {
-    std::shared_ptr<DesktopNotification> d = std::make_shared<DesktopNotification>(id, m_appID, title, body);
+    std::shared_ptr<DesktopNotification> d = std::make_shared<DesktopNotification>(id, m_appID, title, body, userInfo);
     m_desktopNotifications.push_back(d);
     return d->createToast(m_toastManager, this);
 }
@@ -197,6 +218,13 @@ bool DesktopNotificationsManager::closeToast(const std::wstring &id)
     return false;
 }
 
+void DesktopNotificationsManager::handleActivatorEvent(const std::wstring &launchArgs)
+{
+    const auto notificationID = Utils::parseNotificationID(launchArgs);
+    const auto userInfo = Utils::parseUserInfo(launchArgs);
+    invokeJSCallback("click", notificationID, userInfo);
+}
+
 bool DesktopNotificationsManager::closeNotification(std::shared_ptr<DesktopNotification> d)
 {
     if (auto history = getHistory())
@@ -214,7 +242,7 @@ bool DesktopNotificationsManager::closeNotification(std::shared_ptr<DesktopNotif
 }
 
 // DesktopToastActivatedEventHandler
-IFACEMETHODIMP DesktopNotificationsManager::Invoke(_In_ IToastNotification * /*sender*/,
+IFACEMETHODIMP DesktopNotificationsManager::Invoke(_In_ IToastNotification *sender,
                                                    _In_ IInspectable *args)
 {
     IToastActivatedEventArgs *buttonReply = nullptr;
@@ -225,13 +253,9 @@ IFACEMETHODIMP DesktopNotificationsManager::Invoke(_In_ IToastNotification * /*s
         return S_OK;
     }
 
-    HSTRING dataArgs;
-    buttonReply->get_Arguments(&dataArgs);
-    std::wstring data = WindowsGetStringRawBuffer(dataArgs, nullptr);
-    const auto dataMap = Utils::splitData(data);
-    const auto notificationID = Utils::wideCharToUTF8(dataMap.at(L"notificationId"));
-
-    invokeJSCallback("click", notificationID);
+    const auto notificationID = DesktopNotification::getNotificationIDFromToast(sender);
+    const auto userInfo = DesktopNotification::getUserInfoFromToast(sender);
+    invokeJSCallback("click", notificationID, userInfo);
 
     return S_OK;
 }
@@ -246,6 +270,7 @@ IFACEMETHODIMP DesktopNotificationsManager::Invoke(_In_ IToastNotification *send
         DN_LOG_ERROR(L"Could not get notification ID from toast");
         return S_OK;
     }
+    const auto userInfo = DesktopNotification::getUserInfoFromToast(sender);
 
     ToastDismissalReason tdr;
     HRESULT hr = e->get_Reason(&tdr);
@@ -254,13 +279,13 @@ IFACEMETHODIMP DesktopNotificationsManager::Invoke(_In_ IToastNotification *send
         switch (tdr)
         {
         case ToastDismissalReason_ApplicationHidden:
-            invokeJSCallback("hidden", notificationID);
+            invokeJSCallback("hidden", notificationID, userInfo);
             break;
         case ToastDismissalReason_UserCanceled:
-            invokeJSCallback("dismissed", notificationID);
+            invokeJSCallback("dismissed", notificationID, userInfo);
             break;
         case ToastDismissalReason_TimedOut:
-            invokeJSCallback("timedout", notificationID);
+            invokeJSCallback("timedout", notificationID, userInfo);
             break;
         }
     }
@@ -278,20 +303,33 @@ IFACEMETHODIMP DesktopNotificationsManager::Invoke(_In_ IToastNotification *send
         DN_LOG_ERROR(L"Could not get notification ID from toast");
         return S_OK;
     }
+    const auto userInfo = DesktopNotification::getUserInfoFromToast(sender);
 
     DN_LOG_ERROR(L"The toast encountered an error.");
-    invokeJSCallback("error", notificationID);
+    invokeJSCallback("error", notificationID, userInfo);
     return S_OK;
 }
 
-void DesktopNotificationsManager::invokeJSCallback(std::string eventName,
-                                                   std::string notificationID)
+void DesktopNotificationsManager::invokeJSCallback(const std::string &eventName,
+                                                   const std::string &notificationID,
+                                                   const std::wstring &userInfo)
 {
-    auto cb = [eventName, notificationID](Napi::Env env, Napi::Function jsCallback)
+    auto cb = [=](Napi::Env env, Napi::Function jsCallback)
     {
-        jsCallback.Call({Napi::String::New(env, eventName),
-                         Napi::String::New(env, notificationID)});
+        Napi::Value userInfoObject = env.Undefined();
+        if (userInfo != L"")
+        {
+            Napi::String userInfoString = Napi::String::New(env, (const char16_t *)userInfo.c_str());
+            userInfoObject = Utils::JSONParse(env, userInfoString);
+        }
+        jsCallback.Call({
+            Napi::String::New(env, eventName),
+            Napi::String::New(env, notificationID),
+            userInfoObject,
+        });
     };
 
     m_callback.BlockingCall(cb);
 }
+
+std::shared_ptr<DesktopNotificationsManager> desktopNotificationsManager = nullptr;

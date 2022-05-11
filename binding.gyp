@@ -12,16 +12,21 @@
       'defines': [
         "NAPI_VERSION=<(napi_build_version)",
       ],
+      'xcode_settings': {
+        'GCC_ENABLE_CPP_EXCEPTIONS': 'YES',
+        'CLANG_CXX_LIBRARY': 'libc++',
+        'MACOSX_DEPLOYMENT_TARGET': '10.14',
+      },
       'conditions': [
         ['OS=="win"', {
           "defines": [
             "UNICODE",
           ],
           'sources': [
-            'src/main.cc',
-            'src/DesktopNotificationsManager.cpp',
-            'src/DesktopNotification.cpp',
-            'src/Utils.cpp'
+            'src/win/main_win.cc',
+            'src/win/DesktopNotificationsManager.cpp',
+            'src/win/DesktopNotification.cpp',
+            'src/win/Utils.cpp'
           ],
           "libraries": [
             "runtimeobject.lib"
@@ -30,6 +35,21 @@
             4267,  # conversion from 'size_t' to 'int', possible loss of data
             4530,  # C++ exception handler used, but unwind semantics are not enabled
             4506,  # no definition for inline function
+          ],
+        }],
+        ['OS=="mac"', {
+          'sources': [
+            'src/mac/main_mac.mm',
+            'src/mac/GHDesktopNotificationsManager.m',
+            'src/mac/Utils.m',
+          ],
+          'xcode_settings': {
+              'OTHER_CFLAGS': [
+                  '-fobjc-arc',
+              ],
+          },
+          'libraries': [
+            '$(SDKROOT)/System/Library/Frameworks/UserNotifications.framework',
           ],
         }],
       ],
