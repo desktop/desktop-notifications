@@ -64,7 +64,7 @@ $ yarn build
 $ cd sample-app
 $ yarn install
 $ yarn build
-$ /usr/bin/codesign --force --sign - --timestamp\=none node_modules/electron/dist/Electron.app/Contents/MacOS/Electron # macOS only
+$ /usr/bin/codesign --deep --force --sign - --timestamp\=none node_modules/electron/dist/Electron.app/Contents/MacOS/Electron # macOS only
 $ yarn start
 ```
 
