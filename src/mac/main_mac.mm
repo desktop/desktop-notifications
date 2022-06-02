@@ -14,7 +14,13 @@
 
 using namespace Napi;
 
+// Disable API availability warning here. Availability will be handled when
+// the instance is created.
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunguarded-availability-new"
 GHDesktopNotificationsManager *desktopNotificationsManager = nil;
+#pragma clang diagnostic pop
+
 Napi::ThreadSafeFunction notificationsCallback;
 
 // Dummy value to pass into function parameter for ThreadSafeFunction.
@@ -49,11 +55,19 @@ namespace
       return env.Undefined();
     }
 
-    auto callback = info[0].As<Napi::Function>();
+    // Create the desktop notifications manager only if it's a supported macOS version
+    if (@available(macOS 10.14, *))
+    {
+      desktopNotificationsManager = [GHDesktopNotificationsManager new];
+    }
+    else
+    {
+      return env.Undefined();
+    }
 
+    auto callback = info[0].As<Napi::Function>();
     notificationsCallback = Napi::ThreadSafeFunction::New(callback.Env(), callback, "Notification Callback", 0, 1);
 
-    desktopNotificationsManager = [GHDesktopNotificationsManager new];
     desktopNotificationsManager.completionHandler = ^(NSString *event, NSString *identifier, NSDictionary *userInfo, dispatch_block_t completionHandler) {
       auto cb = [event, identifier, userInfo, completionHandler](Napi::Env env, Napi::Function jsCallback)
       {
@@ -76,6 +90,11 @@ namespace
   Napi::Value showNotification(const Napi::CallbackInfo &info)
   {
     const Napi::Env &env = info.Env();
+
+    if (desktopNotificationsManager == nil)
+    {
+      return env.Undefined();
+    }
 
     if (info.Length() < 3)
     {
@@ -110,61 +129,38 @@ namespace
     NSString *body = [NSString stringWithCharacters:(const unichar *)bodyUTF16.c_str()
                                              length:bodyUTF16.size()];
 
-    UNMutableNotificationContent* content = [[UNMutableNotificationContent alloc] init];
-    content.title = [NSString localizedUserNotificationStringForKey:title arguments:nil];
-    content.body = [NSString localizedUserNotificationStringForKey:body arguments:nil];
-    content.sound = [UNNotificationSound defaultSound];
-
+    NSDictionary *userInfo = nil;
     if (info.Length() > 3 && info[3].IsObject())
     {
-      auto userInfo = info[3].As<Napi::Object>();
-      content.userInfo = getNSObjectFromNapiValue(env, userInfo);
+      auto userInfoObject = info[3].As<Napi::Object>();
+      userInfo = getNSObjectFromNapiValue(env, userInfoObject);
     }
-
-    // Create the request object.
-    UNNotificationRequest* request = [UNNotificationRequest
-          requestWithIdentifier:notificationID content:content trigger:nil];
 
     Napi::Promise::Deferred deferred = Napi::Promise::Deferred::New(env);
     Napi::ThreadSafeFunction ts_fn = Napi::ThreadSafeFunction::New(
       env, Napi::Function::New(env, NoOp), "showNotificationCallback", 0, 1);
-
-    UNUserNotificationCenter* center = [UNUserNotificationCenter currentNotificationCenter];
     __block Napi::ThreadSafeFunction tsfn = ts_fn;
 
-    [center
-     requestAuthorizationWithOptions:UNAuthorizationOptionBadge | UNAuthorizationOptionSound | UNAuthorizationOptionAlert
-     completionHandler:^(BOOL granted, NSError *error) {
+    [desktopNotificationsManager showNotificationWithIdentifier:notificationID
+                                                          title:title
+                                                           body:body
+                                                       userInfo:userInfo
+                                              completionHandler:^(NSError *error) {
 
-        if (error != nil || !granted) {
-            NSLog(@"Permission to display notification wasn't granted: %@", error);
+      if (error != nil) {
+        auto callback = [deferred](Napi::Env env, Napi::Function js_cb) {
+          deferred.Reject(env.Undefined());
+        };
+        tsfn.BlockingCall(callback);
+        tsfn.Release();
+        return;
+      }
 
-            auto callback = [deferred](Napi::Env env, Napi::Function js_cb) {
-              deferred.Reject(env.Undefined());
-            };
-            tsfn.BlockingCall(callback);
-            tsfn.Release();
-            return;
-        }
-
-        [center addNotificationRequest:request withCompletionHandler:^(NSError * _Nullable error) {
-          if (error != nil) {
-              NSLog(@"Error posting notification: %@", error.localizedDescription);
-
-              auto callback = [deferred](Napi::Env env, Napi::Function js_cb) {
-                deferred.Reject(env.Undefined());
-              };
-              tsfn.BlockingCall(callback);
-              tsfn.Release();
-              return;
-          }
-
-            auto callback = [deferred](Napi::Env env, Napi::Function js_cb) {
-              deferred.Resolve(env.Undefined());
-            };
-            tsfn.BlockingCall(callback);
-            tsfn.Release();
-        }];
+      auto callback = [deferred](Napi::Env env, Napi::Function js_cb) {
+        deferred.Resolve(env.Undefined());
+      };
+      tsfn.BlockingCall(callback);
+      tsfn.Release();
     }];
 
     return deferred.Promise();
@@ -173,6 +169,11 @@ namespace
   Napi::Value closeNotification(const Napi::CallbackInfo &info)
   {
     const Napi::Env &env = info.Env();
+
+    if (desktopNotificationsManager == nil)
+    {
+      return env.Undefined();
+    }
 
     if (info.Length() < 1)
     {
@@ -189,8 +190,7 @@ namespace
     NSString *notificationID = [NSString stringWithCString:info[0].As<Napi::String>().Utf8Value().c_str()
                                                   encoding:[NSString defaultCStringEncoding]];
 
-    UNUserNotificationCenter* center = [UNUserNotificationCenter currentNotificationCenter];
-    [center removePendingNotificationRequestsWithIdentifiers:@[notificationID]];
+    [desktopNotificationsManager removePendingNotificationRequestsWithIdentifiers:@[notificationID]];
 
     return env.Undefined();
   }
@@ -199,31 +199,19 @@ namespace
   {
     const Napi::Env &env = info.Env();
 
+    if (desktopNotificationsManager == nil)
+    {
+      return env.Undefined();
+    }
+
     Napi::Promise::Deferred deferred = Napi::Promise::Deferred::New(env);
     Napi::ThreadSafeFunction ts_fn = Napi::ThreadSafeFunction::New(
       env, Napi::Function::New(env, NoOp), "getNotificationsPermissionCallback", 0, 1);
 
     __block Napi::ThreadSafeFunction tsfn = ts_fn;
-    UNUserNotificationCenter* center = [UNUserNotificationCenter currentNotificationCenter];
-    [center getNotificationSettingsWithCompletionHandler:^(UNNotificationSettings *settings) {
-
-      std::string permission = "default";
-
-      if (settings.authorizationStatus == UNAuthorizationStatusNotDetermined)
-      {
-        permission = "default";
-      }
-      else if (settings.authorizationStatus == UNAuthorizationStatusDenied)
-      {
-        permission = "denied";
-      }
-      else
-      {
-        permission = "granted";
-      }
-
+    [desktopNotificationsManager getNotificationSettingsWithCompletionHandler:^(NSString *permission) {
       auto callback = [permission, deferred](Napi::Env env, Napi::Function js_cb) {
-        deferred.Resolve(Napi::String::New(env, permission));
+        deferred.Resolve(Napi::String::New(env, permission.UTF8String));
       };
       tsfn.BlockingCall(callback);
       tsfn.Release();
@@ -236,16 +224,18 @@ namespace
   {
     const Napi::Env &env = info.Env();
 
+    if (desktopNotificationsManager == nil)
+    {
+      return env.Undefined();
+    }
+
     Napi::Promise::Deferred deferred = Napi::Promise::Deferred::New(env);
     Napi::ThreadSafeFunction ts_fn = Napi::ThreadSafeFunction::New(
       env, Napi::Function::New(env, NoOp), "requestNotificationsPermissionCallback", 0, 1);
 
-    UNUserNotificationCenter* center = [UNUserNotificationCenter currentNotificationCenter];
-
     __block Napi::ThreadSafeFunction tsfn = ts_fn;
-    [center
-     requestAuthorizationWithOptions:UNAuthorizationOptionBadge | UNAuthorizationOptionSound | UNAuthorizationOptionAlert
-     completionHandler:^(BOOL granted, NSError *error) {
+    [desktopNotificationsManager
+     requestAuthorizationWithCompletionHandler:^(BOOL granted, NSError *error) {
 
       if (error != nil) {
           NSLog(@"Error requesting permission %@", error);

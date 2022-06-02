@@ -6,13 +6,27 @@ import * as os from 'os'
  */
 export function supportsNotifications() {
   if (process.platform === 'darwin') {
-    return true
+    return supportsDarwinNotifications()
   }
 
-  if (process.platform !== 'win32') {
-    return false
+  if (process.platform === 'win32') {
+    return supportsWindowsNotifications()
   }
 
+  return false
+}
+
+function supportsDarwinNotifications() {
+  const versionComponents = os.release().split('.')
+  const majorVersion = parseInt(versionComponents[0], 10)
+
+  // Only macOS 10.14 and newer are supported. Since os.release() gives us the
+  // Darwin kernel version, it should be a major version of 18 or higher, according
+  // to https://en.wikipedia.org/wiki/Darwin_%28operating_system%29#Release_history
+  return majorVersion >= 18
+}
+
+function supportsWindowsNotifications() {
   const versionComponents = os.release().split('.')
   const majorVersion = parseInt(versionComponents[0], 10)
 
@@ -25,5 +39,5 @@ export function supportsNotifications() {
  * display notifications. As of today, only macOS supports this.
  */
 export function supportsNotificationsPermissionRequest() {
-  return process.platform === 'darwin'
+  return process.platform === 'darwin' && supportsDarwinNotifications()
 }
