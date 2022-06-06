@@ -922,7 +922,7 @@ depd@~1.1.2:
   integrity sha1-m81S4UwJd2PnSbJ0xDRu0uVgtak=
 
 desktop-notifications@../:
-  version "0.2.0"
+  version "0.2.2"
   dependencies:
     node-addon-api "^5.0.0"
     prebuild-install "^7.0.1"
