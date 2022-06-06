@@ -166,6 +166,13 @@ namespace
     return deferred.Promise();
   }
 
+  Napi::Value terminateNotifications(const Napi::CallbackInfo &info)
+  {
+    const Napi::Env &env = info.Env();
+    desktopNotificationsManager = nil;
+    return env.Undefined();
+  }
+
   Napi::Value closeNotification(const Napi::CallbackInfo &info)
   {
     const Napi::Env &env = info.Env();
@@ -254,9 +261,9 @@ namespace
   Napi::Object Init(Napi::Env env, Napi::Object exports)
   {
     exports.Set(Napi::String::New(env, "initializeNotifications"), Napi::Function::New(env, initializeNotifications));
+    exports.Set(Napi::String::New(env, "terminateNotifications"), Napi::Function::New(env, terminateNotifications));
     exports.Set(Napi::String::New(env, "showNotification"), Napi::Function::New(env, showNotification));
     exports.Set(Napi::String::New(env, "closeNotification"), Napi::Function::New(env, closeNotification));
-    exports.Set(Napi::String::New(env, "requestNotificationsPermission"), Napi::Function::New(env, requestNotificationsPermission));
     exports.Set(Napi::String::New(env, "getNotificationsPermission"), Napi::Function::New(env, getNotificationsPermission));
     exports.Set(Napi::String::New(env, "requestNotificationsPermission"), Napi::Function::New(env, requestNotificationsPermission));
 

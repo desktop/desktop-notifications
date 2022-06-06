@@ -133,11 +133,6 @@ HRESULT DesktopNotificationsManager::RegisterClassObjects(const std::wstring &to
 DesktopNotificationsManager::~DesktopNotificationsManager()
 {
     m_callback.Release();
-
-    for (auto n : m_desktopNotifications)
-    {
-        closeNotification(n);
-    }
     m_desktopNotifications.clear();
 
     UnregisterClassObjects();
