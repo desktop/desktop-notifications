@@ -8,6 +8,7 @@ import {
   onNotificationEvent,
   requestNotificationsPermission,
   getNotificationSettingsUrl,
+  terminateNotifications,
 } from 'desktop-notifications'
 
 const createWindow = () => {
@@ -29,6 +30,9 @@ const createWindow = () => {
     })
   )
   win.webContents.openDevTools()
+  win.on('closed', () => {
+    terminateNotifications()
+  })
   return win
 }
 
