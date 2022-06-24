@@ -40,7 +40,10 @@ function supportsWindowsNotifications() {
       : CreatorsUpdateBuildNumber
 
   // Only Windows 10 (15063) and newer are supported
-  return majorVersion >= 10 && buildNumber >= CreatorsUpdateBuildNumber
+  return (
+    majorVersion > 10 ||
+    (majorVersion === 10 && buildNumber >= CreatorsUpdateBuildNumber)
+  )
 }
 
 /**
