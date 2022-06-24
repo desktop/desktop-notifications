@@ -27,11 +27,19 @@ function supportsDarwinNotifications() {
 }
 
 function supportsWindowsNotifications() {
+  // The Windows Notification APIs we use are only available on Windows 10+, and
+  // some of them are limited before the Creators Update (build 15063).
+  const CreatorsUpdateBuildNumber = 15063
+
   const versionComponents = os.release().split('.')
   const majorVersion = parseInt(versionComponents[0], 10)
+  const buildNumber =
+    versionComponents.length >= 3
+      ? parseInt(versionComponents[2], 10)
+      : CreatorsUpdateBuildNumber
 
-  // Only Windows 10 and newer are supported
-  return majorVersion >= 10
+  // Only Windows 10 (15063) and newer are supported
+  return majorVersion >= 10 && buildNumber >= CreatorsUpdateBuildNumber
 }
 
 /**
